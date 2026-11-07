@@ -32,26 +32,28 @@ fn run() -> Result<()> {
         }
         "fmt" => exec("cargo", &["fmt", "--all"], None),
         "fmt-check" => exec("cargo", &["fmt", "--all", "--", "--check"], None),
-        "clippy" => exec(
-            "cargo",
-            &[
-                "clippy",
-                "--workspace",
-                "--all-targets",
-                "--all-features",
-                "--",
-                "-D",
-                "warnings",
-            ],
-            None,
-        ),
+        "clippy" => {
+            exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None)?;
+            exec(
+                "cargo",
+                &[
+                    "clippy",
+                    "--workspace",
+                    "--all-targets",
+                    "--all-features",
+                    "--",
+                    "-D",
+                    "warnings",
+                ],
+                None,
+            )
+        }
         "check" => exec("cargo", &["check", "--workspace", "--all-targets"], None),
         "test" => exec("cargo", &["test", "--workspace"], None),
-        "test-all" => exec(
-            "cargo",
-            &["test", "--workspace", "--features", "native-geometry"],
-            None,
-        ),
+        "test-all" => {
+            exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None)?;
+            exec("cargo", &["test", "--workspace", "--features", "native-geometry"], None)
+        }
         "native" => exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None),
         "native-test" => exec("make", &["-C", "native/tlaxtrelom-geometry", "test"], None),
         "native-clean" => exec("make", &["-C", "native/tlaxtrelom-geometry", "clean"], None),
@@ -106,6 +108,10 @@ fn ci() -> Result<()> {
     println!("==> fmt");
     exec("cargo", &["fmt", "--all", "--", "--check"], None)?;
 
+    println!("==> C++ (geometría)");
+    exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None)?;
+    exec("make", &["-C", "native/tlaxtrelom-geometry", "test"], None)?;
+
     println!("==> clippy");
     exec(
         "cargo",
@@ -120,10 +126,6 @@ fn ci() -> Result<()> {
         ],
         None,
     )?;
-
-    println!("==> C++ (geometría)");
-    exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None)?;
-    exec("make", &["-C", "native/tlaxtrelom-geometry", "test"], None)?;
 
     println!("==> C/Zig (cinemática espacial SIMD)");
     exec("make", &["-C", "native/tlaxtrelom-spatial", "test"], None)?;
@@ -309,34 +311,34 @@ fn local_links(markdown: &str) -> Vec<String> {
 fn print_help() {
     println!(
         "\
-Tlaxtrelom Engine — xtask
+ Tlaxtrelom Engine — xtask
 
-USO:
-    cargo xtask <comando>
+ USO:
+     cargo xtask <comando>
 
-COMANDOS:
-    fmt             formatea todo el workspace
-    fmt-check       verifica formato sin escribir
-    clippy          clippy con -D warnings
-    check           cargo check --workspace --all-targets
-    test            tests Rust con features por defecto
-    test-all        tests Rust con la isla C++ enlazada
-    native          compila la isla C++ (Makefile)
-    native-test     ejecuta el smoke test de la ABI C++
-    native-clean    limpia el build C++
-    spatial         tests de la cinemática espacial C/Zig
-    harmonyos       tests del puente HarmonyOS for PC (ArkUI/XComponent)
-    shaders         compila y valida shaders GLSL a SPIR-V
-    dotnet          valida el SDK C# (Tlaxtrelom.Engine)
-    relay           valida el protocolo Go de telemetría FullDive/VR
-    python          tests de las herramientas Python
-    lua             tests del runtime de scripting Lua
-    node            tests de las herramientas TypeScript
-    protocol        valida el encoder HIR desde Python
-    docs            verifica enlaces locales de la documentación
-    ci              matriz completa políglota y determinista
-    run [args...]   ejecuta el host (pasa los args al binario)
-    clean           limpia artefactos
-"
+ COMANDOS:
+     fmt             formatea todo el workspace
+     fmt-check       verifica formato sin escribir
+     clippy          clippy con -D warnings
+     check           cargo check --workspace --all-targets
+     test            tests Rust con features por defecto
+     test-all        tests Rust con la isla C++ enlazada
+     native          compila la isla C++ (Makefile)
+     native-test     ejecuta el smoke test de la ABI C++
+     native-clean    limpia el build C++
+     spatial         tests de la cinemática espacial C/Zig
+     harmonyos       tests del puente HarmonyOS for PC (ArkUI/XComponent)
+     shaders         compila y valida shaders GLSL a SPIR-V
+     dotnet          valida el SDK C# (Tlaxtrelom.Engine)
+     relay           valida el protocolo Go de telemetría FullDive/VR
+     python          tests de las herramientas Python
+     lua             tests del runtime de scripting Lua
+     node            tests de las herramientas TypeScript
+     protocol        valida el encoder HIR desde Python
+     docs            verifica enlaces locales de la documentación
+     ci              matriz completa políglota y determinista
+     run [args...]   ejecuta el host (pasa los args al binario)
+     clean           limpia artefactos
+ "
     );
 }
