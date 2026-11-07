@@ -1,8 +1,8 @@
 # Tlaxtrelom Engine
 
-> **PROPIETARIO Y CONFIDENCIAL.** © 2026 — Todos los derechos reservados.
-> Uso interno exclusivo. Prohibida su copia, distribución o publicación total o
-> parcial sin autorización escrita. Ver [propiedad intelectual](docs/04-propiedad-intelectual.md).
+> Licenciado bajo **[MIT License](LICENSE)**. © 2026 angiraulene1-create.
+> Motor gráfico modular, determinista y orientado a experimentación XR y simulación espacial.
+> Ver documentación en [arquitectura](docs/01-architecture.md) y [política de dependencias](docs/04-propiedad-intelectual.md).
 
 Motor gráfico políglota, determinista y orientado a **VR / FullDive**. Rust
 posee el runtime y el frame loop; C++ aporta la isla de geometría virtual; C11

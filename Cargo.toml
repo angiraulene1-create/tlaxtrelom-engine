@@ -1,6 +1,5 @@
-# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
-# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
-# CONFIDENTIAL — internal use only.
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create. All rights reserved.
 
 [workspace]
 resolver = "2"
