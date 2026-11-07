@@ -173,11 +173,11 @@ La hoja de ruta y los criterios de salida están en
    neuronales tienen *fallback* determinista.
 6. **La seguridad del usuario es un requisito, no una feature.** Un casco BCI
    nunca acciona un actuador sin *gate*, *watchdog* y parada física.
-7. **La propiedad intelectual se protege en el proceso, no al final.** Cabeceras
-   SPDX, allowlist de licencias, SBOM y *provenance* desde el primer commit.
+7. **La propiedad intelectual y dependencias se verifican en el proceso, no al final.** Cabeceras
+   SPDX, allowlist de licencias permisivas, SBOM y *provenance* desde el primer commit.
 
 ## Licencia
 
-Propietaria. Ver [LICENSE](LICENSE) y
-[propiedad intelectual](docs/04-propiedad-intelectual.md). El código no se
-publica ni se sube a registries públicos.
+Este proyecto está licenciado bajo los términos de la **[Licencia MIT](LICENSE)**. © 2026 angiraulene1-create.
+Eres libre de utilizar, modificar, bifurcar y distribuir este motor de acuerdo con los términos de dicha licencia.
+Ver también la [política de dependencias y licencias de terceros](docs/04-propiedad-intelectual.md).

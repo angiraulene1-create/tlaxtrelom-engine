@@ -1,26 +1,24 @@
-# Tlaxtrelom Engine — Propiedad intelectual y modelo interno
+# Tlaxtrelom Engine — Licencia y gestión de dependencias
 
-> **Clasificación: CONFIDENCIAL — uso interno.**
-> Versión 0.1 · Este documento define cómo se protege, licencia, construye y
-> distribuye el motor. No es asesoramiento legal: es la política de ingeniería
-> que legal revisa y aprueba.
+> **Versión 0.2 · Licenciado bajo MIT.**
+> Este documento define la política de licenciamiento del motor y los controles
+> de licencias de dependencias de terceros.
 
 ---
 
-## 0. Decisión
+## 0. Modelo de licenciamiento
 
-Tlaxtrelom es un motor **propietario y de uso interno**. No es open source, no se
-publica en registries públicos y no se distribuye código fuente fuera de la
-organización.
+Tlaxtrelom Engine se publica como software de código abierto bajo los términos de la
+**[Licencia MIT](../LICENSE)**. Cualquier persona puede usar, inspeccionar,
+modificar y distribuir el código fuente conforme a dicha licencia.
 
 | Aspecto | Decisión |
 |---|---|
-| Código fuente | Repositorio privado, acceso por SSO y *need to know* |
-| Licencia | Propietaria, todos los derechos reservados (`LicenseRef-Tlaxtrelom-Proprietary`) |
-| Distribución | Binarios firmados a equipos internos; licencia a socios solo bajo NDA |
-| Contribuciones externas | Cerradas; contratistas firman cesión de IP antes del primer commit |
-| Dependencias | Allowlist de licencias, SBOM y atribución automatizada |
-| Publicación | Prohibida sin aprobación de Legal + Seguridad + Dirección |
+| Código fuente | Repositorio público en GitHub (`angiraulene1-create/tlaxtrelom-engine`) |
+| Licencia principal | Licencia MIT (`LICENSE`) |
+| Distribución | Código fuente abierto y compilación local reproducible |
+| Contribuciones externas | Abiertas mediante Pull Requests conforme a [CONTRIBUTING.md](../CONTRIBUTING.md) |
+| Dependencias | Allowlist de licencias permisivas (MIT, Apache-2.0, BSD) validadas por `cargo-deny` |
 
 **Consecuencia arquitectónica:** al no haber comunidad externa, no hay CLA, no
 hay API pública estable y no hay obligación de compatibilidad. A cambio, se
