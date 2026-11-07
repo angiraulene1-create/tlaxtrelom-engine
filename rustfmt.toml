@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+#
+# La configuración es deliberadamente cercana a los valores por defecto:
+# `cargo fmt --check` debe ser estable entre versiones del toolchain.
+
+edition = "2021"
+max_width = 100
+newline_style = "Unix"

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+
+[workspace]
+resolver = "2"
+members = ["crates/tlaxtrelom-core", "crates/xtask"]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.82"
+license-file = "LICENSE"
+publish = false
+
+[workspace.dependencies]
+anyhow = "1"
+bytemuck = { version = "1", features = ["derive"] }
+pollster = "0.4"
+rtrb = "0.3"
+triple_buffer = "8"
+wgpu = "24"
+winit = "0.30"
+libc = "0.2"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+undocumented_unsafe_blocks = "warn"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"
+
+[profile.bench]
+lto = "thin"
+codegen-units = 1

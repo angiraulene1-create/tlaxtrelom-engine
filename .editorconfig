@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{rs,toml,yml,yaml,json,ts,js}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+
+[*.{c,h}]
+indent_size = 4
+
+[*.{cpp,hpp}]
+indent_size = 4

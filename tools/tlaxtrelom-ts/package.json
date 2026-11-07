@@ -1,0 +1,19 @@
+{
+  "name": "@tlaxtrelom/tools",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Herramientas de autoría y validación de Tlaxtrelom Engine (TypeScript)",
+  "license": "LicenseRef-Tlaxtrelom-Proprietary",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "bin": {
+    "tlaxtrelom-ts": "./src/cli.ts"
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "selftest": "node src/cli.ts selftest",
+    "demo": "node src/cli.ts demo"
+  }
+}

@@ -1,0 +1,33 @@
+#version 450
+// SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+// Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+// CONFIDENTIAL — internal use only.
+//
+// Compute shader para cálculo de máscara de foveated rendering
+// guiada por eye-tracking e intención FullDive.
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0) uniform GazeUniforms {
+    vec2 gazeUV;          // Centro de fóvea [0, 1]
+    vec2 resolution;      // Ancho x Alto de la textura
+    float foveaRadius;    // Radio foveal nítido
+    float peripheralDrop; // Tasa de degradación periférica
+} uGaze;
+
+layout(binding = 1, r8) uniform writeonly image2D outFoveationMask;
+
+void main() {
+    ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
+    if (pixelCoord.x >= int(uGaze.resolution.x) || pixelCoord.y >= int(uGaze.resolution.y)) {
+        return;
+    }
+
+    vec2 uv = vec2(pixelCoord) / uGaze.resolution;
+    float distToGaze = distance(uv, uGaze.gazeUV);
+
+    // 1.0 en el centro foveal, decae hacia 0.25 en la periferia extrema
+    float density = clamp(1.0 - smoothstep(uGaze.foveaRadius, uGaze.foveaRadius * 3.0, distToGaze) * uGaze.peripheralDrop, 0.25, 1.0);
+
+    imageStore(outFoveationMask, pixelCoord, vec4(density, 0.0, 0.0, 1.0));
+}

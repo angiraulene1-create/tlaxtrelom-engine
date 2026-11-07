@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+
+[package]
+name = "xtask"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+license-file = "../../LICENSE"
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[dependencies]
+
+[lints]
+workspace = true

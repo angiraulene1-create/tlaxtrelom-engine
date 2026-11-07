@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+#
+# Alias de Cargo para que `cargo xtask ...` funcione sin instalación global.
+
+[alias]
+xtask = "run --quiet --package xtask --"

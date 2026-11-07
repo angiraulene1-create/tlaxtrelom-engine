@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+
+[package]
+name = "tlaxtrelom-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+license-file = "../../LICENSE"
+
+[lib]
+name = "tlaxtrelom_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tlaxtrelom"
+path = "src/main.rs"
+
+[features]
+# La HAL C11 es parte del runtime profesional y se compila por defecto.
+# `--no-default-features` produce un binario Rust-only para entornos sin C.
+default = ["native-hal"]
+# Enlaza native/tlaxtrelom-geometry (C++) contra un build de CMake/Make.
+native-geometry = []
+# Compila y enlaza native/tlaxtrelom-hal (C11) con el compilador del sistema.
+native-hal = []
+
+[dependencies]
+anyhow.workspace = true
+bytemuck.workspace = true
+pollster.workspace = true
+rtrb.workspace = true
+triple_buffer.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc.workspace = true
+
+[build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+naga = { version = "24", features = ["wgsl-in"] }
+
+[lints]
+workspace = true

@@ -1,0 +1,50 @@
+# Política de dependencias de Tlaxtrelom Engine (propietario).
+# Ejecutar: cargo deny check
+# Cualquier excepción requiere justificación, autor y fecha de revisión.
+
+[graph]
+all-features = false
+no-default-features = true
+
+[advisories]
+version = 2
+yanked = "warn"
+ignore = []
+
+[licenses]
+version = 2
+# Allowlist alineada con docs/04-propiedad-intelectual.md § 3.1
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "BSL-1.0",
+    "Unicode-3.0",
+    "Unlicense",
+    "CC0-1.0",
+    "MPL-2.0", # copyleft por archivo: solo si no se modifica
+]
+confidence-threshold = 0.9
+
+# Excepciones puntuales. Formato:
+# [[licenses.exceptions]]
+# name = "crate"
+# allow = ["LGPL-3.0-only"]
+# reason = "Enlace dinámico aprobado por Legal el AAAA-MM-DD"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# `deny` es por nombre de crate, no por licencia. Si se detecta una dependencia
+# con copyleft fuerte, se añade aquí y se documenta la alternativa.
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+# En CI se sustituye por el espejo interno; crates.io solo como fallback local.
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

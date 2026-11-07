@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tlaxtrelom-tools"
+version = "0.2.0"
+description = "Herramientas de autoría y pipeline de Tlaxtrelom Engine"
+readme = { text = "Herramientas internas de Tlaxtrelom Engine. Uso propietario.", content-type = "text/plain" }
+requires-python = ">=3.11"
+license = { text = "LicenseRef-Tlaxtrelom-Proprietary" }
+authors = [{ name = "Tlaxtrelom Engine" }]
+classifiers = [
+  "Private :: Do Not Upload",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+numpy = ["numpy>=1.26"]
+dev = ["mypy>=1.10", "ruff>=0.5"]
+
+[project.scripts]
+tlaxtrelom-tools = "tlaxtrelom_tools.cli:main"
+
+[tool.setuptools]
+packages = ["tlaxtrelom_tools"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

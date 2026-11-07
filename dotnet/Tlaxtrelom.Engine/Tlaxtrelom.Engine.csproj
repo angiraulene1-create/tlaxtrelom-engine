@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Tlaxtrelom.Engine</RootNamespace>
+    <AssemblyName>Tlaxtrelom.Engine</AssemblyName>
+    <Version>0.2.0</Version>
+    <Authors>Tlaxtrelom Engine Team</Authors>
+    <Company>Tlaxtrelom Engine</Company>
+    <Description>High-performance C# SDK and runtime bindings for Tlaxtrelom Engine VR and FullDive stack.</Description>
+    <PackageLicenseExpression>Proprietary</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>

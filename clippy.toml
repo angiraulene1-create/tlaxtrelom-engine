@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+#
+# Los lints del workspace viven en Cargo.toml (`[workspace.lints]`). Aquí solo
+# se declara la versión mínima y las excepciones acotadas a tests.
+#
+# En tests, `unwrap`/`expect` son aceptables: un fixture roto debe fallar el
+# test con su línea exacta, no devolver un error que se propague sin contexto.
+
+msrv = "1.82"
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

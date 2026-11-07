@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: LicenseRef-Tlaxtrelom-Proprietary
+# Copyright (c) 2026 Tlaxtrelom Engine. All rights reserved.
+# CONFIDENTIAL — internal use only.
+#
+# CI de Tlaxtrelom Engine. No duplica comandos: invoca `cargo xtask ci`,
+# exactamente la misma matriz que se ejecuta en local.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matriz:
+    name: matriz completa
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libzstd-dev \
+            lua5.4 \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev
+          sudo ln -sf /usr/bin/lua5.4 /usr/local/bin/lua
+
+      - name: Rust estable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Caché de Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Node 24 (TypeScript nativo)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Matriz completa
+        run: cargo xtask ci

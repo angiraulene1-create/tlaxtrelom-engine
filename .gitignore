@@ -1,0 +1,40 @@
+# Rust
+/target
+**/*.rs.bk
+
+# C++ / CMake
+/native/**/build
+*.so
+*.dylib
+*.dll
+*.o
+*.obj
+compile_commands.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Secretos: nunca deben llegar al repo
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+secrets/
+
+# Tlaxtrelom artifacts
+*.tlaxtrelompack
+*.tlaxtrelomgeo
