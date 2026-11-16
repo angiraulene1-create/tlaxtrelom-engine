@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Tlaxtrelom
+GenericName=Dimensional graphics engine
+GenericName[es_ES]=Motor grafico dimensional
+Comment=Motor grafico 2d-5d con XR y FullDive experimental
+Comment[es_ES]=Motor grafico 2d-5d con XR y FullDive experimental
+Exec=tlaxtrelom %F
+TryExec=tlaxtrelom
+Icon=tlaxtrelom
+Terminal=false
+Categories=Graphics;3DGraphics;Game;
+Keywords=engine;xr;dimensional;wgsl;vulkan;
+MimeType=application/x-tlxg;
+StartupNotify=true

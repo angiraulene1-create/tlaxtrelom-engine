@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+#
+# Alias de Cargo para que `cargo xtask ...` funcione sin instalación global.
+
+[alias]
+xtask = "run --quiet --package xtask --"

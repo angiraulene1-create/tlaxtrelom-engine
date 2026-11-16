@@ -1,0 +1,10 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+# Deja el icono y la entrada de menu registrados sin depender de gsettings.
+set -e
+command -v update-desktop-database >/dev/null 2>&1 && \
+  update-desktop-database /usr/share/applications || true
+command -v gtk-update-icon-cache >/dev/null 2>&1 && \
+  gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+exit 0

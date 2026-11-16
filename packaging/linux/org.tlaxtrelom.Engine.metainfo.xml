@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 angiraulene1-create -->
+<component type="desktop-application">
+  <id>org.tlaxtrelom.Engine</id>
+  <name>Tlaxtrelom</name>
+  <summary>Motor gráfico dimensional con XR</summary>
+  <summary xml:lang="es">Motor gráfico dimensional con XR y FullDive experimental</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <url type="homepage">https://github.com/angiraulene1-create/tlaxtrelom-engine</url>
+  <developer_name>angiraulene1-create</developer_name>
+  <releases>
+    <release version="0.2.0" date="2026-11-15"/>
+  </releases>
+  <description>
+    <p>Render HDR con tonemapping ACES, MSAA, sombreadores WGSL y modos 2d,
+    2.5d, 3d, 3.5d, 4d, 4.5d y 5d sobre wgpu (Vulkan y DX12). Incluye XR
+    estéreo side-by-side, geometría virtual por páginas (isla C++) y relay de red.</p>
+    <p>El complemento FullDive (interfaz cerebral de 8 canales) es experimental
+    y está desactivado por defecto; se enciende con --fulldive.</p>
+  </description>
+  <categories>
+    <category>Graphics</category>
+    <category>3DGraphics</category>
+  </categories>
+  <keywords>
+    <keyword>engine</keyword>
+    <keyword>xr</keyword>
+    <keyword>vulkan</keyword>
+    <keyword>wgsl</keyword>
+  </keywords>
+  <content_ratings>
+    <rating system="oars-1.1" value="3"/>
+  </content_ratings>
+  <launchable type="desktop-id">tlaxtrelom.desktop</launchable>
+</component>

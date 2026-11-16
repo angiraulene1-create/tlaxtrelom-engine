@@ -1,0 +1,7 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+set -e
+command -v update-desktop-database >/dev/null 2>&1 && \
+  update-desktop-database /usr/share/applications || true
+exit 0

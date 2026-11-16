@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+# Plantilla del campo de control del .deb. `xtask package` sustituye los
+# marcadores de versión, arquitectura dpkg y tamaño instalado al construir
+# control.tar.gz, así que esta cabecera no lleva marcadores.
+Package: tlaxtrelom
+Version: ${VERSION}
+Section: graphics
+Priority: optional
+Architecture: ${ARCH}
+Installed-Size: ${SIZE}
+Maintainer: angiraulene1-create <angiraulene1-create@users.noreply.github.com>
+Depends: libvulkan1 | mesa-vulkan-drivers, libasound2
+Recommends: gamescope
+Homepage: https://github.com/angiraulene1-create/tlaxtrelom-engine
+Description: Motor grafico dimensional y de inmersion Tlaxtrelom
+ Motor de render Vulkan/WGPU con modos 2d, 2.5d, 3d, 3.5d, 4d, 4.5d y 5d,
+ XR estereo y el complemento experimental FullDive (desactivado por defecto).
+ El paquete incluye el motor, los shaders y el claster de demostracion.

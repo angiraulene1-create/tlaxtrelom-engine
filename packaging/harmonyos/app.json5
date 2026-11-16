@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 angiraulene1-create
+// Configuracion global del proyecto HAP de Tlaxtrelom (modelo Stage, API 12).
+// Lo que consume DevEco Studio; `cargo xtask package --platform harmonyos`
+// copia este arbol en dist/ junto a la biblioteca nativa ya compilada.
+{
+  "app": {
+    "bundleName": "com.tlaxtrelom.engine",
+    "vendor": "angiraulene1-create",
+    "versionCode": 1,
+    "versionName": "0.2.0",
+    "icon": "$media:app_icon",
+    "label": "$string:app_name",
+    "minAPIVersion": 12,
+    "targetAPIVersion": 12,
+    "apiReleaseType": "Release"
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "type": "entry",
+      "srcPath": "./entry",
+      "srcEntry": "./ets/entryability/EntryAbility.ets"
+    }
+  ]
+}

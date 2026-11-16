@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+#
+# La configuración es deliberadamente cercana a los valores por defecto:
+# `cargo fmt --check` debe ser estable entre versiones del toolchain.
+
+edition = "2021"
+max_width = 100
+newline_style = "Unix"
