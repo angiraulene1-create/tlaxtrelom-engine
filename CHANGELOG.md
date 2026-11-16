@@ -101,6 +101,11 @@ explícita y no un accidente.
 
 ### Corregido
 
+- El AppImage generado no arrancaba: `make_appimage` empaquetaba el árbol portable
+  tal cual, que sólo trae `bin/tlaxtrelom.sh`, y el runtime ejecuta `AppRun` en la
+  raíz del árbol extraído (`execv` fallaba con ENOENT). Ahora se inyecta un `AppRun`
+  en el payload (y solo en él: el `.tar.gz` y el Flatpak comparten árbol y quedan
+  limpios). Verificado: `tlaxtrelom-0.3.0-x86_64.AppImage --selftest` OK.
 - CI de GitHub en verde por primera vez (run 43926561337) con cinco correcciones:
   `cargo fmt` sobre `xtask/package.rs`; la geometría C++ se construye **antes** de
   `clippy --all-features` (su `build.rs` enlaza `native/tlaxtrelom-geometry/build`

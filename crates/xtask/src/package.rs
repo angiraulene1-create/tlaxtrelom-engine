@@ -1177,7 +1177,17 @@ fn make_appimage(raiz: &Path, opts: &Options) -> Result<PathBuf> {
         "gcc appimage_runtime.c",
     )?;
 
-    // Empaquetar el payload comprimido del árbol portable
+    // Empaquetar el payload comprimido del árbol portable. El runtime ejecuta
+    // AppRun en la raíz del árbol extraído y el árbol portable sólo trae
+    // bin/tlaxtrelom.sh: se genera para el payload y se quita después, para no
+    // ensuciar el Flatpak, que comparte el árbol.
+    let apprun = raiz.join("AppRun");
+    fs::write(
+        &apprun,
+        "#!/bin/sh\nexec \"${APPDIR:-$(dirname \"$0\")}/bin/tlaxtrelom.sh\" \"$@\"\n",
+    )
+    .map_err(|e| format!("no se puede escribir {}: {e}", apprun.display()))?;
+    make_executable(&apprun)?;
     let nombre_raiz = raiz
         .file_name()
         .ok_or_else(|| "raiz sin nombre".to_string())?;
@@ -1190,6 +1200,8 @@ fn make_appimage(raiz: &Path, opts: &Options) -> Result<PathBuf> {
             .arg(nombre_raiz),
         "tar appdir payload",
     )?;
+    fs::remove_file(&apprun)
+        .map_err(|e| format!("no se puede quitar {}: {e}", apprun.display()))?;
 
     // Inyectar magic Type 2 ("AI\x02") en la cabecera ELF (offset 8..11)
     let mut runner_bytes = fs::read(&temp_runner).io()?;
