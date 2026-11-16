@@ -1158,7 +1158,9 @@ fn make_appimage(raiz: &Path, opts: &Options) -> Result<PathBuf> {
     if !runtime_c.is_file() {
         return Err("falta packaging/linux/appimage_runtime.c".to_string());
     }
-    let archivo = opts.out.join(format!("tlaxtrelom-{}-x86_64.AppImage", version()));
+    let archivo = opts
+        .out
+        .join(format!("tlaxtrelom-{}-x86_64.AppImage", version()));
     let temp_runner = opts.out.join("appimage_runner.tmp");
     let temp_payload = opts.out.join("appdir_payload.tar.gz");
 
@@ -1176,7 +1178,9 @@ fn make_appimage(raiz: &Path, opts: &Options) -> Result<PathBuf> {
     )?;
 
     // Empaquetar el payload comprimido del árbol portable
-    let nombre_raiz = raiz.file_name().ok_or_else(|| "raiz sin nombre".to_string())?;
+    let nombre_raiz = raiz
+        .file_name()
+        .ok_or_else(|| "raiz sin nombre".to_string())?;
     exec(
         Command::new("tar")
             .args(["-czf"])
@@ -1222,7 +1226,9 @@ fn make_appimage(raiz: &Path, opts: &Options) -> Result<PathBuf> {
 fn make_flatpak(raiz: &Path, opts: &Options) -> Result<PathBuf> {
     let flatpak_bin = which("flatpak").ok_or_else(|| "no hay flatpak en el PATH".to_string())?;
     let ostree_bin = which("ostree").ok_or_else(|| "no hay ostree en el PATH".to_string())?;
-    let archivo = opts.out.join(format!("tlaxtrelom-{}-x86_64.flatpak", version()));
+    let archivo = opts
+        .out
+        .join(format!("tlaxtrelom-{}-x86_64.flatpak", version()));
     let temp_app = opts.out.join("flatpak_app_build.tmp");
     let temp_repo = opts.out.join("flatpak_repo.tmp");
 
