@@ -400,11 +400,14 @@ fn build(dir: &Path, platform: &str, opts: &Options, avisos: &mut Vec<String>) -
     exec(&mut cmd, &format!("cargo build --target {destino}"))?;
 
     if platform == "linux" {
+        // Sólo `native`: empaquetar no recompila el SPIR-V de contrato. Los
+        // `.spv` viajan desde el árbol (donde CI los valida contra sus
+        // fuentes GLSL en cada commit, `xtask shaders`) porque en
+        // ubuntu-22.04, el runner que fija glibc 2.35, no existe paquete
+        // `glslc` alguno.
         exec(
-            Command::new("make")
-                .args(["native", "shaders"])
-                .current_dir(dir),
-            "make native shaders",
+            Command::new("make").args(["native"]).current_dir(dir),
+            "make native",
         )?;
     }
     if platform == "harmonyos" {

@@ -10,12 +10,6 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
-- El job Linux del release ya no instala `glslc`/`spirv-tools`: no hacen falta
-  para `cargo xtask package` (los shaders los valida sólo el paso `shaders` de
-  ci.yml) y el paquete `glslc` no existe en los repos de ubuntu-22.04, que fue
-  lo que hizo fallar la primera corrida de `v0.4.0-alpha.1` en «Dependencias
-  del sistema».
-
 ## [0.4.0-alpha.1] — 2026-11-16
 
 ### Cambiado
@@ -29,7 +23,11 @@ explícita y no un accidente.
   sube a 5 y el metainfo declara `type="development"`.
 - El job Linux del workflow de release construye en `ubuntu-22.04`
   (glibc ≥ 2.35) en vez del runner más nuevo: los binarios de 0.3.x exigían
-  glibc 2.43 y el AppImage no arrancaba en distros algo más viejas.
+  glibc 2.43 y el AppImage no arrancaba en distros algo más viejas. Como en
+  22.04 no existe ningún paquete `glslc`, `cargo xtask package` deja de
+  recompilar ahí el SPIR-V de contrato (`make native shaders` pasa a
+  `make native`): los `.spv` viajan desde el árbol, donde el paso `shaders`
+  de ci.yml los valida contra sus fuentes GLSL en cada commit.
 
 ### Corregido
 
