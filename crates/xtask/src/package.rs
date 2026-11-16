@@ -2203,7 +2203,13 @@ mod tests {
     fn la_version_del_workspace_se_lee_del_manifest() {
         let v = version();
         assert_ne!(v, "0.0.0-dev", "no se pudo leer la versión de Cargo.toml");
-        assert_eq!(v.matches('.').count(), 2, "{v} no parece x.y.z");
+        let core = v.split('-').next().unwrap();
+        assert_eq!(core.matches('.').count(), 2, "{v} no parece x.y.z[-sufijo]");
+        assert!(
+            core.split('.')
+                .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit())),
+            "{v} no parece x.y.z[-sufijo]"
+        );
     }
 
     #[test]

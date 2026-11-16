@@ -34,7 +34,10 @@ env:
 jobs:
   linux:
     name: instaladores Linux
-    runs-on: ubuntu-latest
+    # Ubuntu 22.04 = glibc 2.35: los binarios salen compatibles con casi
+    # cualquier distro viva. En ubuntu-latest (glibc 2.43) el AppImage no
+    # arrancaba en máquinas con glibc más vieja.
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -217,6 +220,22 @@ jobs:
           [ -s /tmp/notas.md ] || printf 'Instaladores de %s.\n' "$RELEASE_TAG" > /tmp/notas.md
           # El título va aparte; se quita el encabezado duplicado de las notas.
           sed -i '1{/^$/d}' /tmp/notas.md
+
+      - name: Aviso pre-release
+        run: |
+          # gh marca solo como pre-release las etiquetas con sufijo semver
+          # (-alpha, -beta, -rc); aquí solo añadimos la advertencia visible.
+          case "$RELEASE_TAG" in
+            *-*)
+              {
+                printf '> [!WARNING]\n'
+                printf '> **Versión alfa: proyecto experimental/conceptual.**\n'
+                printf '> Etapa temprana: estos binarios pueden fallar, cambiar de formato sin aviso o no funcionar en tu equipo. No aptos para producción.\n\n'
+                cat /tmp/notas.md
+              } > /tmp/notas-alpha.md
+              mv /tmp/notas-alpha.md /tmp/notas.md
+              ;;
+          esac
 
       - name: Crear o actualizar el Release
         env:

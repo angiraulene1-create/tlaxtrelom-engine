@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (strcmp(argv[i], "--appimage-version") == 0) {
-            printf("Tlaxtrelom Engine 0.3.2 (AppImage Portable)\n");
+            printf("Tlaxtrelom Engine 0.4.0-alpha.1 (AppImage Portable)\n");
             fclose(fexe);
             return 0;
         }

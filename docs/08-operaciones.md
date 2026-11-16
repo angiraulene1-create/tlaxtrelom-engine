@@ -148,7 +148,7 @@ Un flag desconocido es un error, no un *silent ignore*.
 Salida humana:
 
 ```text
-tlaxtrelom-engine 0.3.2 — selftest OK
+tlaxtrelom-engine 0.4.0-alpha.1 — selftest OK
   ticks           : 600
   sim hash        : 0x728977e58f08e538
   determinismo    : sí
@@ -233,7 +233,13 @@ su fallo nunca bloquea el release (no existe SDK OHOS en runners públicos; ver
 fusiona los artefactos `dist-*`, crea el Release si no existe —con las notas
 recortadas por `awk` de la sección `## [X.Y.Z]` del `CHANGELOG.md` del tag— o lo
 actualiza con `--clobber` si ya está, y al final recalcula `SHA256SUMS` sobre
-**todos** los assets finales del release, incluidos los añadidos a mano.
+**todos** los assets finales del release, incluidos los añadidos a mano. Las
+etiquetas con sufijo semver (`-alpha.N`, `-beta`, `-rc`) se marcan solas como
+**pre-release** y reciben además un aviso de «versión alfa / proyecto
+experimental» al principio de las notas. El job Linux corre en
+`ubuntu-22.04` a propósito: fija la glibc mínima de los binarios en 2.35;
+en el runner más nuevo salían exigiendo glibc 2.43 y el AppImage no arrancaba
+en distros un poco más viejas.
 
 Pasos del humano (el resto lo hace GitHub):
 
@@ -330,7 +336,7 @@ shell evalúa) y pasan `sh -n`.
 
 | Contrato | Valor actual |
 |---|---|
-| Versión del workspace | 0.3.2 |
+| Versión del workspace | 0.4.0-alpha.1 |
 | MSRV | Rust 1.83 (`rust-version`, `clippy.toml`) |
 | ABI de geometría (`GEO_ABI_VERSION`) | 2 |
 | Formato cocinado | `TLXG` v2 (origen de sector en `double`, LOD en `double`, frustum culling) |

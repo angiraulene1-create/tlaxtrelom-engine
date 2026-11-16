@@ -27,7 +27,7 @@ import {
 } from "./ir.ts";
 
 const ENGINE_NAME = "tlaxtrelom-engine";
-const VERSION = "0.3.2";
+const VERSION = "0.4.0-alpha.1";
 
 interface SelftestReport {
   engine: string;

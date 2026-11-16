@@ -3,6 +3,14 @@
 
 # Tlaxtrelom Engine
 
+> [!WARNING]
+> **Versión alfa (`0.4.0-alpha.1`) — proyecto experimental y conceptual.** El
+> motor está en etapa temprana: puede fallar al arrancar en equipos o GPUs sin
+> cubrir, cambiar de formato de archivos o de ABI sin aviso, y los instaladores
+> no están firmados ni probados en todas las plataformas. Las etiquetas de
+> GitHub se publican como *pre-releases* a propósito. Úsalo como laboratorio,
+> no como producto.
+
 > Licenciado bajo **[MIT License](LICENSE)**. © 2026 angiraulene1-create.
 > Motor gráfico modular, determinista y de ultra-alta fidelidad (2D, 2.5D, 3D, 3.5D, 4D, 4.5D, 5D) con arquitectura de próxima generación (estándar Unreal Engine 5/6) y complemento experimental FullDive en segundo plano (opt-in, desactivado por defecto).
 > Ver documentación en [arquitectura](docs/01-architecture.md) y [licencias y dependencias](docs/04-licencias.md).

@@ -10,6 +10,32 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+## [0.4.0-alpha.1] — 2026-11-16
+
+### Cambiado
+
+- **El proyecto se marca alfa de forma explícita (experimental/conceptual):**
+  la versión pasa a `0.4.0-alpha.1` en todos los manifiestos (workspace Rust +
+  lock, TS, Python, .NET, Lua, empaquetados y `docs/08`), de modo que `alpha`
+  aparece en el nombre de cada artefacto; GitHub reconoce la etiqueta como
+  **pre-release** y las notas del release encabezan con un aviso de etapa
+  temprana. El README lleva el mismo banderín. `versionCode` de HarmonyOS
+  sube a 5 y el metainfo declara `type="development"`.
+- El job Linux del workflow de release construye en `ubuntu-22.04`
+  (glibc ≥ 2.35) en vez del runner más nuevo: los binarios de 0.3.x exigían
+  glibc 2.43 y el AppImage no arrancaba en distros algo más viejas.
+
+### Corregido
+
+- Smoke test de los seis artefactos de `v0.3.2` (bajar y ejecutar de verdad):
+  AppImage en ventana (~1100 fps en RADV Renoir), `tar.gz`, `.deb` dpkg
+  extraído con `ar` y su binario lanzado, `.zip` con sus nueve entradas de
+  shaders y el instalador NSIS verificado con `7z` (13 archivos, desinstalador
+  incluido) responden bien; los `.exe` de Windows no se pudieron ejecutar sin
+  wine, solo verificación estructural. El único defecto encontrado fue el de
+  la glibc, corregido arriba; recordatorio para quien baja el AppImage: hay
+  que darle permiso de ejecución (`chmod +x`) después de descargarlo.
+
 ## [0.3.2] — 2026-11-16
 
 ### Cambiado
