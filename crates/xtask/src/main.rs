@@ -73,7 +73,7 @@ fn run() -> Result<()> {
         "lua" => exec("lua", &["script/tests/run.lua"], None),
         "node" => exec(
             "node",
-            &["--test", "tests"],
+            &["--test", "tests/*.test.ts"],
             Some(Path::new("tools/tlaxtrelom-ts")),
         ),
         "protocol" => exec(
@@ -170,7 +170,7 @@ fn ci() -> Result<()> {
     println!("==> TypeScript/Node");
     exec(
         "node",
-        &["--test", "tests"],
+        &["--test", "tests/*.test.ts"],
         Some(Path::new("tools/tlaxtrelom-ts")),
     )?;
 

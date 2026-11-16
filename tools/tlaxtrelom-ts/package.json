@@ -12,7 +12,7 @@
     "tlaxtrelom-ts": "./src/cli.ts"
   },
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.ts",
     "selftest": "node src/cli.ts selftest",
     "demo": "node src/cli.ts demo"
   }
