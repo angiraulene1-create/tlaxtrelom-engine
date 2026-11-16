@@ -109,6 +109,12 @@ fn ci() -> Result<()> {
     println!("==> fmt");
     exec("cargo", &["fmt", "--all", "--", "--check"], None)?;
 
+    // clippy --all-features habilita native-geometry, y build.rs enlaza la
+    // librería C++: el build nativo debe existir antes de cualquier cargo.
+    println!("==> C++ (geometría)");
+    exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None)?;
+    exec("make", &["-C", "native/tlaxtrelom-geometry", "test"], None)?;
+
     println!("==> clippy");
     exec(
         "cargo",
@@ -123,10 +129,6 @@ fn ci() -> Result<()> {
         ],
         None,
     )?;
-
-    println!("==> C++ (geometría)");
-    exec("make", &["-C", "native/tlaxtrelom-geometry", "all"], None)?;
-    exec("make", &["-C", "native/tlaxtrelom-geometry", "test"], None)?;
 
     println!("==> C (cinemática espacial SIMD; el port a Zig no se compila aquí)");
     exec("make", &["-C", "native/tlaxtrelom-spatial", "test"], None)?;
