@@ -37,6 +37,9 @@ jobs:
     # Ubuntu 22.04 = glibc 2.35: los binarios salen compatibles con casi
     # cualquier distro viva. En ubuntu-latest (glibc 2.43) el AppImage no
     # arrancaba en máquinas con glibc más vieja.
+    # Aquí no se instalan glslc/spirv-tools: `xtask package` no compila
+    # shaders (eso lo hace el paso `shaders` de ci.yml, que corre en
+    # ubuntu-latest, donde el paquete glslc sí existe; en 22.04 no).
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
@@ -59,8 +62,6 @@ jobs:
             libxi-dev \
             libxcursor-dev \
             libvulkan-dev \
-            glslc \
-            spirv-tools \
             flatpak \
             ostree
 

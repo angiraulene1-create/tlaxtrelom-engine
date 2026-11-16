@@ -10,6 +10,12 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+- El job Linux del release ya no instala `glslc`/`spirv-tools`: no hacen falta
+  para `cargo xtask package` (los shaders los valida sólo el paso `shaders` de
+  ci.yml) y el paquete `glslc` no existe en los repos de ubuntu-22.04, que fue
+  lo que hizo fallar la primera corrida de `v0.4.0-alpha.1` en «Dependencias
+  del sistema».
+
 ## [0.4.0-alpha.1] — 2026-11-16
 
 ### Cambiado
