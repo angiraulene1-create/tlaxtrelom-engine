@@ -872,12 +872,27 @@ fn archive(
                 Ok(deb) => out.push(deb),
                 Err(e) => avisos.push(e),
             }
+            match make_appimage(raiz, opts) {
+                Ok(appimage) => out.push(appimage),
+                Err(e) => avisos.push(e),
+            }
+            match make_flatpak(raiz, opts) {
+                Ok(flatpak) => out.push(flatpak),
+                Err(e) => avisos.push(e),
+            }
         }
         "windows" => {
             out.push(zip_dir(raiz, opts)?);
+            let exe_directo = opts.out.join(format!("tlaxtrelom-{}.exe", version()));
+            if fs::copy(raiz.join(exe("windows")), &exe_directo).is_ok() {
+                out.push(exe_directo);
+            }
             match make_setup_exe(raiz, opts) {
                 Ok(setup) => out.push(setup),
-                Err(e) => avisos.push(e),
+                Err(e) => match make_windows_installer_fallback(raiz, opts) {
+                    Ok(setup_fb) => out.push(setup_fb),
+                    Err(_) => avisos.push(e),
+                },
             }
         }
         _ => out.push(zip_dir(raiz, opts)?),
@@ -1098,6 +1113,221 @@ fn make_setup_exe(raiz: &Path, opts: &Options) -> Result<PathBuf> {
         fs::rename(&generado, &destino).io()?;
     }
     Ok(destino)
+}
+
+/// Genera el ejecutable de instalación para Windows sin depender obligatoriamente de NSIS.
+fn make_windows_installer_fallback(_raiz: &Path, opts: &Options) -> Result<PathBuf> {
+    let ws = workspace();
+    let setup_target = ws.join("target/x86_64-pc-windows-msvc/release/tlaxtrelom-setup.exe");
+    let destino = opts.out.join(format!("tlaxtrelom-setup-{}.exe", version()));
+    if setup_target.is_file() {
+        fs::copy(&setup_target, &destino).io()?;
+        return Ok(destino);
+    }
+    let c_source = ws.join("packaging/windows/win_setup.c");
+    if c_source.is_file() {
+        if let Some(clang) = which("clang") {
+            let _ = exec(
+                Command::new(clang)
+                    .args([
+                        "-target",
+                        "x86_64-pc-windows-gnu",
+                        "-fuse-ld=lld",
+                        "-O2",
+                        "-fno-builtin",
+                        "-nostdlib",
+                        "-Wl,-e,main",
+                    ])
+                    .arg(&c_source)
+                    .arg("-o")
+                    .arg(&destino),
+                "clang win_setup.c -> tlaxtrelom-setup.exe",
+            );
+            if destino.is_file() {
+                return Ok(destino);
+            }
+        }
+    }
+    Err("no se pudo generar tlaxtrelom-setup.exe".to_string())
+}
+
+/// Construye un ejecutable portable .AppImage Type 2 compatible para Linux.
+fn make_appimage(raiz: &Path, opts: &Options) -> Result<PathBuf> {
+    let ws = workspace();
+    let runtime_c = ws.join("packaging/linux/appimage_runtime.c");
+    if !runtime_c.is_file() {
+        return Err("falta packaging/linux/appimage_runtime.c".to_string());
+    }
+    let archivo = opts.out.join(format!("tlaxtrelom-{}-x86_64.AppImage", version()));
+    let temp_runner = opts.out.join("appimage_runner.tmp");
+    let temp_payload = opts.out.join("appdir_payload.tar.gz");
+
+    let compiler = which("gcc")
+        .or_else(|| which("clang"))
+        .ok_or_else(|| "no hay gcc ni clang para compilar AppImage".to_string())?;
+
+    exec(
+        Command::new(compiler)
+            .args(["-O2"])
+            .arg(&runtime_c)
+            .arg("-o")
+            .arg(&temp_runner),
+        "gcc appimage_runtime.c",
+    )?;
+
+    // Empaquetar el payload comprimido del árbol portable
+    let nombre_raiz = raiz.file_name().ok_or_else(|| "raiz sin nombre".to_string())?;
+    exec(
+        Command::new("tar")
+            .args(["-czf"])
+            .arg(&temp_payload)
+            .arg("-C")
+            .arg(&opts.out)
+            .arg(nombre_raiz),
+        "tar appdir payload",
+    )?;
+
+    // Inyectar magic Type 2 ("AI\x02") en la cabecera ELF (offset 8..11)
+    let mut runner_bytes = fs::read(&temp_runner).io()?;
+    if runner_bytes.len() > 16 {
+        runner_bytes[8] = b'A';
+        runner_bytes[9] = b'I';
+        runner_bytes[10] = 2;
+    }
+    let offset = runner_bytes.len() as u64;
+
+    let payload_bytes = fs::read(&temp_payload).io()?;
+    let payload_len = payload_bytes.len() as u64;
+
+    // Trailer de 20 bytes: offset (u64 LE) + size (u64 LE) + magic 0x544C5841 (u32 LE)
+    let mut trailer = [0u8; 20];
+    trailer[0..8].copy_from_slice(&offset.to_le_bytes());
+    trailer[8..16].copy_from_slice(&payload_len.to_le_bytes());
+    trailer[16..20].copy_from_slice(&0x544C5841u32.to_le_bytes());
+
+    let mut final_file = fs::File::create(&archivo).io()?;
+    use std::io::Write;
+    final_file.write_all(&runner_bytes).io()?;
+    final_file.write_all(&payload_bytes).io()?;
+    final_file.write_all(&trailer).io()?;
+
+    let _ = fs::remove_file(&temp_runner);
+    let _ = fs::remove_file(&temp_payload);
+
+    make_executable(&archivo)?;
+    Ok(archivo)
+}
+
+/// Construye el paquete único .flatpak para distribución universal en Linux.
+fn make_flatpak(raiz: &Path, opts: &Options) -> Result<PathBuf> {
+    let flatpak_bin = which("flatpak").ok_or_else(|| "no hay flatpak en el PATH".to_string())?;
+    let ostree_bin = which("ostree").ok_or_else(|| "no hay ostree en el PATH".to_string())?;
+    let archivo = opts.out.join(format!("tlaxtrelom-{}-x86_64.flatpak", version()));
+    let temp_app = opts.out.join("flatpak_app_build.tmp");
+    let temp_repo = opts.out.join("flatpak_repo.tmp");
+
+    let _ = fs::remove_dir_all(&temp_app);
+    let _ = fs::remove_dir_all(&temp_repo);
+
+    let resultado = (|| -> Result<()> {
+        exec(
+            Command::new(&flatpak_bin)
+                .args(["build-init"])
+                .arg(&temp_app)
+                .args([
+                    "org.tlaxtrelom.Engine",
+                    "org.freedesktop.Platform",
+                    "org.freedesktop.Sdk",
+                    "25.08",
+                ]),
+            "flatpak build-init",
+        )?;
+
+        let files_bin = temp_app.join("files/bin");
+        let files_share = temp_app.join("files/share");
+        fs::create_dir_all(&files_bin).io()?;
+        fs::create_dir_all(files_share.join("applications")).io()?;
+        fs::create_dir_all(files_share.join("icons/hicolor/scalable/apps")).io()?;
+        fs::create_dir_all(files_share.join("metainfo")).io()?;
+
+        fs::copy(raiz.join("bin/tlaxtrelom"), files_bin.join("tlaxtrelom")).io()?;
+        make_executable(&files_bin.join("tlaxtrelom"))?;
+
+        let desktop_content = "[Desktop Entry]\nType=Application\nName=Tlaxtrelom Engine\nGenericName=Graphics Engine\nComment=Modular next-gen graphics engine\nExec=tlaxtrelom\nIcon=org.tlaxtrelom.Engine\nTerminal=false\nCategories=Development;Graphics;\nKeywords=graphics;engine;multidimensional;xr;\n";
+        fs::write(
+            files_share.join("applications/org.tlaxtrelom.Engine.desktop"),
+            desktop_content,
+        )
+        .io()?;
+
+        let ws = workspace();
+        fs::copy(
+            ws.join("packaging/linux/tlaxtrelom.svg"),
+            files_share.join("icons/hicolor/scalable/apps/org.tlaxtrelom.Engine.svg"),
+        )
+        .io()?;
+        fs::copy(
+            ws.join("packaging/linux/org.tlaxtrelom.Engine.metainfo.xml"),
+            files_share.join("metainfo/org.tlaxtrelom.Engine.metainfo.xml"),
+        )
+        .io()?;
+        copy_dir(
+            &raiz.join("share/tlaxtrelom"),
+            &files_share.join("tlaxtrelom"),
+            false,
+        )?;
+
+        exec(
+            Command::new(&flatpak_bin)
+                .args([
+                    "build-finish",
+                    "--command=tlaxtrelom",
+                    "--socket=x11",
+                    "--socket=wayland",
+                    "--socket=fallback-x11",
+                    "--device=all",
+                    "--share=ipc",
+                    "--filesystem=host",
+                ])
+                .arg(&temp_app),
+            "flatpak build-finish",
+        )?;
+
+        exec(
+            Command::new(&ostree_bin)
+                .args(["init", "--mode=archive-z2", "--repo"])
+                .arg(&temp_repo),
+            "ostree init",
+        )?;
+
+        exec(
+            Command::new(&flatpak_bin)
+                .args([
+                    "build-export",
+                    "--disable-fsync",
+                    "--disable-sandbox",
+                    "--no-update-summary",
+                ])
+                .arg(&temp_repo)
+                .arg(&temp_app),
+            "flatpak build-export",
+        )?;
+
+        exec(
+            Command::new(&flatpak_bin)
+                .args(["build-bundle"])
+                .arg(&temp_repo)
+                .arg(&archivo)
+                .arg("org.tlaxtrelom.Engine"),
+            "flatpak build-bundle",
+        )?;
+        Ok(())
+    })();
+
+    let _ = fs::remove_dir_all(&temp_app);
+    let _ = fs::remove_dir_all(&temp_repo);
+
+    resultado.map(|_| archivo)
 }
 
 /// Suma de `Installed-Size` en KiB, como dpkg: sólo ficheros regulares.

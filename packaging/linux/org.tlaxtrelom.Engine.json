@@ -1,0 +1,34 @@
+{
+  "app-id": "org.tlaxtrelom.Engine",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "25.08",
+  "sdk": "org.freedesktop.Sdk",
+  "command": "tlaxtrelom",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=x11",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--device=all",
+    "--filesystem=host"
+  ],
+  "modules": [
+    {
+      "name": "tlaxtrelom",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm755 bin/tlaxtrelom /app/bin/tlaxtrelom",
+        "install -Dm644 share/applications/org.tlaxtrelom.Engine.desktop /app/share/applications/org.tlaxtrelom.Engine.desktop",
+        "install -Dm644 share/icons/hicolor/scalable/apps/org.tlaxtrelom.Engine.svg /app/share/icons/hicolor/scalable/apps/org.tlaxtrelom.Engine.svg",
+        "install -Dm644 share/metainfo/org.tlaxtrelom.Engine.metainfo.xml /app/share/metainfo/org.tlaxtrelom.Engine.metainfo.xml",
+        "cp -r share/tlaxtrelom /app/share/"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "."
+        }
+      ]
+    }
+  ]
+}
