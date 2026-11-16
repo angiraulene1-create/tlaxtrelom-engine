@@ -8,8 +8,8 @@
 `tlaxtrelom-<versión>-linux-x86_64.tar.gz` se descomprime y se ejecuta:
 
 ```sh
-tar -xzf tlaxtrelom-0.2.0-linux-x86_64.tar.gz
-cd tlaxtrelom-0.2.0-linux-x86_64
+tar -xzf tlaxtrelom-0.3.0-linux-x86_64.tar.gz
+cd tlaxtrelom-0.3.0-linux-x86_64
 ./bin/tlaxtrelom.sh --dimension 3.5d
 ```
 
@@ -26,7 +26,7 @@ desde dónde se lance. No toca el sistema.
 `libasound2`.
 
 ```sh
-sudo dpkg -i tlaxtrelom_0.2.0_amd64.deb   # o: sudo apt install ./tlaxtrelom_0.2.0_amd64.deb
+sudo dpkg -i tlaxtrelom_0.3.0_amd64.deb   # o: sudo apt install ./tlaxtrelom_0.3.0_amd64.deb
 ```
 
 El `.deb` se construye con `dpkg-deb -b` si está instalado y, si no, con
@@ -40,8 +40,8 @@ En distros sin dpkg (CachyOS/Arch, Fedora, openSUSE) se puede usar el
 instalador del árbol portable:
 
 ```sh
-PREFIX=/usr/local ./install.sh tlaxtrelom-0.2.0-linux-x86_64
-PREFIX=/usr/local ./install.sh -u tlaxtrelom-0.2.0-linux-x86_64   # desinstalar
+PREFIX=/usr/local ./install.sh tlaxtrelom-0.3.0-linux-x86_64
+PREFIX=/usr/local ./install.sh -u tlaxtrelom-0.3.0-linux-x86_64   # desinstalar
 ```
 
 Por defecto `PREFIX=$HOME/.local`, así que no necesita root.

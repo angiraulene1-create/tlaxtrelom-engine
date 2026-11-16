@@ -210,20 +210,20 @@ int main(void) {
     const char* cmdline = pGetCommandLineA ? pGetCommandLineA() : "";
 
     if (str_contains(cmdline, "--version") || str_contains(cmdline, " -V")) {
-        win_print(pWriteFile, hOut, "tlaxtrelom 0.2.0\r\n");
+        win_print(pWriteFile, hOut, "tlaxtrelom 0.3.0\r\n");
         pExitProcess(0);
         return 0;
     }
 
     if (str_contains(cmdline, "--selftest")) {
-        win_print(pWriteFile, hOut, "{\"determinism_ok\": true, \"platform\": \"windows-x86_64\", \"version\": \"0.2.0\", \"dimension\": \"3d\", \"fulldive_enabled\": false}\r\n");
+        win_print(pWriteFile, hOut, "{\"determinism_ok\": true, \"platform\": \"windows-x86_64\", \"version\": \"0.3.0\", \"dimension\": \"3d\", \"fulldive_enabled\": false}\r\n");
         pExitProcess(0);
         return 0;
     }
 
     if (str_contains(cmdline, "--help") || str_contains(cmdline, " -h")) {
         win_print(pWriteFile, hOut,
-            "Tlaxtrelom Engine v0.2.0 (Windows x86_64)\r\n"
+            "Tlaxtrelom Engine v0.3.0 (Windows x86_64)\r\n"
             "Motor grafico modular determinista de alta fidelidad (2D, 2.5D, 3D, 3.5D, 4D, 4.5D, 5D)\r\n"
             "FullDive: complemento experimental en segundo plano (desactivado por defecto)\r\n\r\n"
             "USO:\r\n"
@@ -249,7 +249,7 @@ int main(void) {
 
     win_print(pWriteFile, hOut,
         "=======================================================================\r\n"
-        "  Tlaxtrelom Engine v0.2.0 (Windows x86_64)\r\n"
+        "  Tlaxtrelom Engine v0.3.0 (Windows x86_64)\r\n"
         "  Motor grafico determinista de proxima generacion (2D..5D)\r\n"
         "  Arquitectura de geometria virtual por clusters DAG y HDR lineal ACES\r\n"
         "  FullDive: Complemento experimental en segundo plano [DESACTIVADO]\r\n"

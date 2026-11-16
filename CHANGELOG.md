@@ -10,6 +10,8 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+## [0.3.0] — 2026-11-16
+
 ### Añadido
 
 - Licencia MIT en todo el repositorio: `LICENSE` es ahora la fuente de verdad y
@@ -83,6 +85,9 @@ explícita y no un accidente.
 
 ### Cambiado
 
+- Versión del workspace subida a `0.3.0` en todos los manifiestos (Cargo, npm,
+  pyproject, csproj, `app.json5` de HarmonyOS, instaladores y empaquetado de
+  Linux/Windows), incluido el `metainfo.xml` con su fecha de publicación.
 - `View::identity()` pasa a ser `View::neutral()` y deja de ser la identidad:
   construye una perspectiva de 90°. Con frustum culling en la isla, una matriz
   identidad significaría «lo visible es el cubo NDC unitario» y podaría cada
@@ -96,6 +101,14 @@ explícita y no un accidente.
 
 ### Corregido
 
+- CI de GitHub en verde por primera vez (run 43926561337) con cinco correcciones:
+  `cargo fmt` sobre `xtask/package.rs`; la geometría C++ se construye **antes** de
+  `clippy --all-features` (su `build.rs` enlaza `native/tlaxtrelom-geometry/build`
+  cuando `native-geometry` está activa); `ci.yml` instala `glslc` + `spirv-tools`
+  en lugar de `glslang-tools` (las herramientas que `check_shaders` invoca);
+  `services/tlaxtrelom-relay/go.mod` para que `go test` funcione en runners con Go;
+  y `node --test` recibe el glob explícito `tests/*.test.ts` porque Node 24 (CI) no
+  descubre archivos `.ts` escaneando un directorio, a diferencia de Node 26.
 - `--msaa 4` entraba en pánico en tiempo de ejecución: el pase de presentación
   usaba el attachment multisample heredado del swapchain con un pipeline de un
   solo sample ("Incompatible sample count"). El swapchain ya no participa en el

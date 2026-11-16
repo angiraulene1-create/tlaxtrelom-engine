@@ -11,7 +11,7 @@
   <url type="homepage">https://github.com/angiraulene1-create/tlaxtrelom-engine</url>
   <developer_name>angiraulene1-create</developer_name>
   <releases>
-    <release version="0.2.0" date="2026-11-15"/>
+    <release version="0.3.0" date="2026-11-16"/>
   </releases>
   <description>
     <p>Render HDR con tonemapping ACES, MSAA, sombreadores WGSL y modos 2d,

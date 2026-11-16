@@ -6,7 +6,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Tlaxtrelom.Engine</RootNamespace>
     <AssemblyName>Tlaxtrelom.Engine</AssemblyName>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Tlaxtrelom Engine Team</Authors>
     <Company>Tlaxtrelom Engine</Company>
     <Description>High-performance C# SDK and runtime bindings for Tlaxtrelom Engine VR and FullDive stack.</Description>
