@@ -890,7 +890,13 @@ fn archive(
             match make_setup_exe(raiz, opts) {
                 Ok(setup) => out.push(setup),
                 Err(e) => match make_windows_installer_fallback(raiz, opts) {
-                    Ok(setup_fb) => out.push(setup_fb),
+                    Ok(setup_fb) => {
+                        avisos.push(format!(
+                            "{e}; se usó el instalador de respaldo (win_setup.c), \
+                             mucho más limitado que el de NSIS"
+                        ));
+                        out.push(setup_fb);
+                    }
                     Err(_) => avisos.push(e),
                 },
             }
@@ -1099,12 +1105,13 @@ fn make_setup_exe(raiz: &Path, opts: &Options) -> Result<PathBuf> {
         )
     })?;
     let guion = raiz.join("tlaxtrelom.nsi");
-    exec(
-        Command::new(makensis)
-            .arg(format!("-DVERSION={}", version()))
-            .arg(&guion),
-        &format!("makensis {}", guion.display()),
-    )?;
+    let mut cmd = Command::new(makensis);
+    cmd.arg(format!("-DVERSION={}", version()))
+        .arg(&guion)
+        // NSIS resuelve OutFile respecto al CWD, no al guion: sin esto el
+        // instalador cae fuera de raiz y parece que makensis falló.
+        .current_dir(raiz);
+    exec(&mut cmd, &format!("makensis {}", guion.display()))?;
     let generado = raiz.join(format!("tlaxtrelom-setup-{}.exe", version()));
     if !generado.is_file() {
         return Err(format!(

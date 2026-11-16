@@ -31,6 +31,15 @@ explícita y no un accidente.
   instalado. `GITHUB_PATH` corrige lo segundo; el job Linux instala además
   `flatpak`/`ostree`, y `publicar` recalcula `SHA256SUMS` sobre todos los
   assets finales del release, no sólo los de la corrida.
+- Tercer fallo destapado por la segunda corrida del release: `make_setup_exe`
+  invocaba `makensis` sin fijar el directorio de trabajo, y como NSIS resuelve
+  `OutFile` relativo al CWD, el instalador real caía fuera del árbol; xtask lo
+  daba por fallido y el respaldo de 4,6 KB (`win_setup.c`) sobrescribía en
+  `dist/` al `tlaxtrelom-setup-<versión>.exe` legítimo sin emitir un solo aviso.
+  Ahora makensis corre con el árbol como CWD, y si se degrada al respaldo queda
+  publicado en los avisos. Además, el paso de sumas ya no usa
+  `gh release download --exclude` (flag inexistente en el gh de los runners):
+  descarga todos los assets y descarta la suma vieja a mano.
 
 ## [0.3.0] — 2026-11-16
 

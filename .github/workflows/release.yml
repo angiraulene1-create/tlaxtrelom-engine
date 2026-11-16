@@ -243,6 +243,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           rm -rf /tmp/activos && mkdir -p /tmp/activos
-          gh release download "$RELEASE_TAG" --dir /tmp/activos --exclude "SHA256SUMS*"
+          # El gh de los runners no conoce --exclude en release download, así
+          # que se descarga todo y se quita la suma vieja a mano.
+          gh release download "$RELEASE_TAG" --dir /tmp/activos --clobber
+          rm -f /tmp/activos/SHA256SUMS
           (cd /tmp/activos && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
           gh release upload "$RELEASE_TAG" /tmp/activos/SHA256SUMS --clobber
