@@ -57,7 +57,9 @@ jobs:
             libxcursor-dev \
             libvulkan-dev \
             glslc \
-            spirv-tools
+            spirv-tools \
+            flatpak \
+            ostree
 
       - uses: dtolnay/rust-toolchain@stable
 
@@ -110,9 +112,21 @@ jobs:
 
       # makensis genera tlaxtrelom-setup.exe; sin él, xtask degrada al
       # instalador de respaldo y el paquete sigue saliendo adelante.
+      # Ojo: choco modifica el PATH de la MÁQUINA, que los pasos siguientes no
+      # heredan; hay que publicar la carpeta de NSIS vía GITHUB_PATH.
       - name: Instalar NSIS (makensis)
         run: |
           choco install nsis -y || echo "aviso: sin NSIS, se usará el instalador de respaldo"
+          NSIS_DIR=""
+          for d in "/c/Program Files (x86)/NSIS" "/c/Program Files/NSIS"; do
+            if [ -x "$d/makensis.exe" ]; then NSIS_DIR="$d"; break; fi
+          done
+          if [ -n "$NSIS_DIR" ]; then
+            echo "C:${NSIS_DIR#/c}" >> "$GITHUB_PATH"
+            echo "makensis disponible en C:${NSIS_DIR#/c}"
+          else
+            echo "aviso: makensis no está en el sistema, se usará el instalador de respaldo"
+          fi
 
       - name: Empaquetar (zip, exe, setup)
         run: cargo xtask package --platform windows
@@ -204,9 +218,6 @@ jobs:
           # El título va aparte; se quita el encabezado duplicado de las notas.
           sed -i '1{/^$/d}' /tmp/notas.md
 
-      - name: Sumas SHA-256
-        run: (cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
-
       - name: Crear o actualizar el Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -223,3 +234,15 @@ jobs:
               --verify-tag
             echo "Release creado con ${#assets[@]} artefactos."
           fi
+
+      # Las sumas se recalculan sobre TODOS los assets finales del release,
+      # no sólo los de esta corrida: así quedan cubiertos también restos de
+      # subidas manuales (p. ej. un .deb construido en local).
+      - name: SHA256SUMS del release completo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf /tmp/activos && mkdir -p /tmp/activos
+          gh release download "$RELEASE_TAG" --dir /tmp/activos --exclude "SHA256SUMS*"
+          (cd /tmp/activos && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
+          gh release upload "$RELEASE_TAG" /tmp/activos/SHA256SUMS --clobber

@@ -1020,11 +1020,19 @@ fn make_deb(raiz: &Path, opts: &Options, avisos: &mut Vec<String>) -> Result<Pat
         .out
         .join(format!("tlaxtrelom_{}_{}.deb", version(), arch));
     if let Some(dpkg) = which("dpkg-deb") {
+        // dpkg-deb exige el metadata DENTRO del árbol, en DEBIAN/.
+        let debian = raiz_deb.join("DEBIAN");
+        fs::create_dir_all(&debian).io()?;
+        for entrada in fs::read_dir(&control_dir).io()? {
+            let src = entrada.io()?.path();
+            if let Some(nombre) = src.file_name() {
+                fs::rename(&src, debian.join(nombre)).io()?;
+            }
+        }
         exec(
             Command::new(dpkg).args(["-b"]).arg(&raiz_deb).arg(&archivo),
             &format!("dpkg-deb -b {} → {}", raiz_deb.display(), archivo.display()),
         )?;
-        let _ = fs::remove_dir_all(&control_dir);
     } else {
         make_deb_ar(&raiz_deb, &control_dir, &archivo)?;
         avisos.push(

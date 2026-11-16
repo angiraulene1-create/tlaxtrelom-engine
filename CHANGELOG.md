@@ -19,6 +19,19 @@ explícita y no un accidente.
   mediante la variable de repositorio `OHOS_NDK_URL` y best-effort: su fallo no
   bloquea el release.
 
+### Corregido
+
+- `xtask package` en Linux: el `.deb` se armaba pero `dpkg-deb -b` fallaba en
+  cualquier máquina con dpkg (CI de Ubuntu) porque el metadata se escribía en
+  un directorio hermano y nunca se colocaba en `DEBIAN/` dentro del árbol; en
+  local pasaba desapercibido porque sin dpkg se usa el contenedor ar+tar. Los
+  `aviso:` del release workflow tampoco bastaban: choco instala NSIS en el PATH
+  de la máquina y los pasos siguientes no lo heredan, así que `makensis` nunca
+  se encontró y el instalador salía como respaldo (4,6 KB) incluso con NSIS
+  instalado. `GITHUB_PATH` corrige lo segundo; el job Linux instala además
+  `flatpak`/`ostree`, y `publicar` recalcula `SHA256SUMS` sobre todos los
+  assets finales del release, no sólo los de la corrida.
+
 ## [0.3.0] — 2026-11-16
 
 ### Añadido
