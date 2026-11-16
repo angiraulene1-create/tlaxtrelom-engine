@@ -23,7 +23,7 @@ if ($Uninstall) {
 }
 
 Write-Host "===========================================================" -ForegroundColor Cyan
-Write-Host "  Instalador de Tlaxtrelom Engine v0.3.0 para Windows" -ForegroundColor Cyan
+Write-Host "  Instalador de Tlaxtrelom Engine v0.3.1 para Windows" -ForegroundColor Cyan
 Write-Host "  Motor grafico de proxima generacion (2D..5D)" -ForegroundColor Cyan
 Write-Host "===========================================================" -ForegroundColor Cyan
 

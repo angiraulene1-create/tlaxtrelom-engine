@@ -10,6 +10,14 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+## [0.3.1] — 2026-11-16
+
+### Cambiado
+
+- Versión 0.3.1 en todos los manifiestos (workspace Rust + lock, TS, Python,
+  .NET, Lua, empaquetados y `docs/08`). El `versionCode` de HarmonyOS sube a 3
+  para permitir la actualización inplace sobre el 0.3.0.
+
 ### Añadido
 
 - `.github/workflows/release.yml`: al publicar una etiqueta `v*` (o por

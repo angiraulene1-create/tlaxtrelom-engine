@@ -193,7 +193,7 @@ int main(void) {
 
     win_print(pWriteFile, hOut,
         "=======================================================================\r\n"
-        "  Instalador de Tlaxtrelom Engine v0.3.0 (Windows Setup x86_64)\r\n"
+        "  Instalador de Tlaxtrelom Engine v0.3.1 (Windows Setup x86_64)\r\n"
         "  Motor grafico modular determinista de ultra-alta fidelidad (2D..5D)\r\n"
         "=======================================================================\r\n"
         "Instalando Tlaxtrelom Engine en el sistema...\r\n"
