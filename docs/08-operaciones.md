@@ -234,8 +234,9 @@ fusiona los artefactos `dist-*`, crea el Release si no existe —con las notas
 recortadas por `awk` de la sección `## [X.Y.Z]` del `CHANGELOG.md` del tag— o lo
 actualiza con `--clobber` si ya está, y al final recalcula `SHA256SUMS` sobre
 **todos** los assets finales del release, incluidos los añadidos a mano. Las
-etiquetas con sufijo semver (`-alpha.N`, `-beta`, `-rc`) se marcan solas como
-**pre-release** y reciben además un aviso de «versión alfa / proyecto
+etiquetas con sufijo semver (`-alpha.N`, `-beta`, `-rc`) reciben el flag
+`--prerelease` **explícito** del workflow (`gh` no las detecta solo: en
+`v0.4.0-alpha.1` publicó como estable) y un aviso de «versión alfa / proyecto
 experimental» al principio de las notas. El job Linux corre en
 `ubuntu-22.04` a propósito: fija la glibc mínima de los binarios en 2.35;
 en el runner más nuevo salían exigiendo glibc 2.43 y el AppImage no arrancaba

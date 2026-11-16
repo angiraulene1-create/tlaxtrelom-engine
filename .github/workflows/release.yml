@@ -224,8 +224,9 @@ jobs:
 
       - name: Aviso pre-release
         run: |
-          # gh marca solo como pre-release las etiquetas con sufijo semver
-          # (-alpha, -beta, -rc); aquí solo añadimos la advertencia visible.
+          # gh NO marca sola la pre-release por el sufijo semver (comprobado
+          # en v0.4.0-alpha.1: salió como release estable); aquí se fija el
+          # flag explícito y se añade la advertencia visible a las notas.
           case "$RELEASE_TAG" in
             *-*)
               {
@@ -244,13 +245,19 @@ jobs:
         run: |
           shopt -s nullglob
           assets=(dist/*)
+          extra=()
+          case "$RELEASE_TAG" in
+            *-*) extra+=(--prerelease) ;;
+          esac
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+            gh release edit "$RELEASE_TAG" "${extra[@]}"
             echo "Release existente actualizado con ${#assets[@]} artefactos."
           else
             gh release create "$RELEASE_TAG" "${assets[@]}" \
               --title "Tlaxtrelom Engine $RELEASE_TAG" \
               --notes-file /tmp/notas.md \
+              "${extra[@]}" \
               --verify-tag
             echo "Release creado con ${#assets[@]} artefactos."
           fi

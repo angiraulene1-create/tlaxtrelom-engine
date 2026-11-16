@@ -10,6 +10,13 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+- El workflow de release pasa `--prerelease` a `gh release create/edit` cuando
+  la etiqueta lleva sufijo semver: `gh` **no** detecta el sufijo solo
+  (`v0.4.0-alpha.1` se publicó como release estable y hubo que marcarlo a
+  mano). Verificado el release ya corregido: pre-release, aviso en las notas,
+  `alpha` en el nombre de los seis artefactos, glibc máxima exigida 2.34,
+  AppImage y binario del `.deb` arrancando de verdad y `SHA256SUMS` 6/6.
+
 ## [0.4.0-alpha.1] — 2026-11-16
 
 ### Cambiado
