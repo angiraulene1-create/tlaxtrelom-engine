@@ -196,11 +196,13 @@ cargo xtask ci
 ```
 
 El workflow usa un único runner `ubuntu-latest` con `build-essential`,
-`pkg-config`, `libzstd-dev`, `glslang-tools` (`glslc` + `spirv-val`), Lua 5.4,
-las cabeceras X11/Wayland que pide `winit`, Rust stable con `rustfmt` y
-`clippy`, Python 3.12 y Node 24. **No instala Zig, Go ni el SDK de .NET**: esos
+`pkg-config`, `libzstd-dev`, `glslc` + `spirv-tools` (los binarios `glslc` y
+`spirv-val` que invoca `xtask check-shaders`), Lua 5.4, las cabeceras
+X11/Wayland que pide `winit`, Rust stable con `rustfmt` y `clippy`, Python 3.12
+y Node 24. **No instala Zig, Go ni el SDK de .NET**: esos
 tres pasos se ejecutan sobre el contrato validado por Python, y sólo invocan el
-toolchain nativo si ya está en `PATH`. No hay matriz multi-OS ni GPU en CI: los
+toolchain nativo si ya está en `PATH`. No hay matriz multi-OS ni GPU en el CI
+por commit (el multi-OS vive en el workflow de release, §6): los
 3 tests Rust de render HDR/present están marcados `#[ignore]` y solo corren en
 hardware local con `cargo test -- --ignored`.
 
@@ -218,22 +220,58 @@ aparece en CI es un fallo de reproducibilidad y se trata como bug.
 
 ## 6. Release
 
-Checklist:
+Desde `v0.3.2` la cadencia está automatizada: **empujar una etiqueta anotada
+`v*` es lo que construye y publica los instaladores**. El workflow
+`.github/workflows/release.yml` —también lanzable a mano con
+`workflow_dispatch` e input `tag` para readjuntar artefactos de un release ya
+publicado— corre `cargo xtask package --platform linux` en `ubuntu-latest` y
+`--platform windows` en `windows-latest`; el de `--platform harmonyos --cross`
+es **opt-in**: solo intenta correr si la variable de repositorio
+`OHOS_NDK_URL` apunta a un NDK OpenHarmony descargable, y como `continue-on-error`
+su fallo nunca bloquea el release (no existe SDK OHOS en runners públicos; ver
+`docs/09-multiplataforma.md`). El job `publicar` exige Linux y Windows en verde,
+fusiona los artefactos `dist-*`, crea el Release si no existe —con las notas
+recortadas por `awk` de la sección `## [X.Y.Z]` del `CHANGELOG.md` del tag— o lo
+actualiza con `--clobber` si ya está, y al final recalcula `SHA256SUMS` sobre
+**todos** los assets finales del release, incluidos los añadidos a mano.
 
-1. `cargo xtask ci` en verde sobre el commit exacto.
-2. `CHANGELOG.md` actualizado.
-3. Versión coherente en `Cargo.toml`, `python/pyproject.toml` y
-   `tools/tlaxtrelom-ts/package.json`.
-4. `cargo build --release` y smoke test de la isla C++.
-5. SBOM generado y archivado (pendiente de automatizar).
-6. Binario firmado; hash publicado junto con la release.
-7. Publicación abierta: tag, notas de release y artefactos firmados en el
-   repositorio público.
+Pasos del humano (el resto lo hace GitHub):
 
-El modelo de distribución es publicación abierta con binarios firmados. El
-código fuente, la documentación y los artefactos cocinados se publican bajo
-licencia MIT (ver `docs/04-licencias.md`); cada binario va firmado y con su
-hash verificable.
+1. Bump de versión en todos los manifiestos: `Cargo.toml` del workspace,
+   TS (`package.json`, `src/cli.ts`), Python (`pyproject.toml`,
+   `__init__.py`), Lua (`script/tlaxtrelom/init.lua`, `script/tests/run.lua`),
+   .NET (`.csproj`), `packaging/` (lanzadores C, `install.ps1`, README,
+   metainfo y `app.json5` de HarmonyOS **subiendo `versionCode`**: si se queda
+   igual, la instalación inplace sobre la versión anterior se bloquea) y
+   `docs/08`. Después `cargo update --workspace` para el lock.
+2. Cortar `[Sin publicar]` del `CHANGELOG.md` como
+   `## [X.Y.Z] — AAAA-MM-DD`, dejando arriba una vacía. Las notas del release
+   se leen de ahí literalmente, así que después del corte no se reescriben a
+   mano: se retracta el tag.
+3. Puerta local sobre el commit exacto: `cargo xtask ci` en verde
+   (fmt, clippy, tests, selftest, package-check…).
+4. `git push origin main` y esperar el CI **de ese commit**: localizar la
+   corrida por SHA (`gh run list --json databaseId,headSha`), no por
+   `--limit 1` (minutos después del push todavía puede mostrar la anterior).
+5. `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z`.
+6. Vigilar la corrida disparada (`gh run watch`) y verificar lo publicado:
+   descargar los assets y `sha256sum -c SHA256SUMS`.
+
+Límites conocidos, cada uno con su `aviso:` visible en el log del workflow
+(degradar, no fingir):
+
+- **Flatpak**: los runners no traen el runtime `org.freedesktop.Platform` y
+  `flatpak build-init` falla; ese artefacto se construye en local y se adjunta
+  a mano. Las sumas completas lo cubren igual.
+- **Sin firma**: el mecanismo de integridad publicado es `SHA256SUMS`; la firma
+  GPG/cosign de binarios sigue pendiente de automatizar.
+- **HarmonyOS**: ningún release se ha construido aún en CI para OHOS; mientras
+  `OHOS_NDK_URL` no esté definida, el paquete sale solo de local con
+  `OHOS_NDK_HOME`.
+
+El modelo de distribución es publicación abierta con artefactos verificables:
+código fuente, documentación, clasteres cocinados e instaladores bajo licencia
+MIT (ver `docs/04-licencias.md`), cada release con su hash SHA-256 comprobable.
 
 ### 6.1 Empaquetado (`cargo xtask package`)
 
@@ -271,10 +309,13 @@ Reglas que sostienen el empaquetado:
   compilada en el host (x86-64) no entra en `entry/libs/arm64-v8a/`: se descarta
   con un aviso, porque un HAP con la ABI equivocada falla en el dispositivo y no
   en la máquina que empaqueta.
-- **Windows y HarmonyOS no están verificados en CI.** La matriz corre en un
-  runner Linux con una sola tripleta instalada; lo que se garantiza acá es el
-  árbol, los guiones y las definiciones (`package-check`), no el binario
-  cruzado. Ver `docs/09-multiplataforma.md`.
+- **El binario de Windows se verifica en el release, no por commit.** El CI de
+  cada commit corre en un runner Linux con una sola tripleta instalada y allí
+  solo se garantizan el árbol, los guiones y las definiciones
+  (`package-check`); pero el workflow de release compila y empaqueta Windows en
+  `windows-latest` en cada etiqueta (probado desde `v0.3.2`: `.deb` de dpkg y
+  instalador NSIS reales). HarmonyOS sigue sin verificarse en ninguna CI
+  pública. Ver `docs/09-multiplataforma.md`.
 
 `package-check` —que `cargo xtask ci` ejecuta en cada commit— comprueba sin
 compilar que las rutas que declara `tlaxtrelom.nsi` son rutas que el empaquetado
