@@ -44,7 +44,8 @@ jobs:
             libxi-dev \
             libxcursor-dev \
             libvulkan-dev \
-            glslang-tools
+            glslc \
+            spirv-tools
           sudo ln -sf /usr/bin/lua5.4 /usr/local/bin/lua
 
       - name: Rust estable
