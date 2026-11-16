@@ -16,7 +16,7 @@ from .bindings import (
 )
 from .ir import IrError, hash_hir, seal, verify
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 __all__ = [
     "Graph",

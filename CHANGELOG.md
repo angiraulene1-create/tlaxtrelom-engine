@@ -10,6 +10,27 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+## [0.3.2] — 2026-11-16
+
+### Cambiado
+
+- Versión 0.3.2 en todos los manifiestos (workspace Rust + lock, TS, Python,
+  .NET, Lua, empaquetados y `docs/08`). El `versionCode` de HarmonyOS sube a 4.
+
+### Corregido
+
+- Dos fallos que la corrida de `v0.3.1` (la primera disparada por el push de
+  una etiqueta) destapó en cuanto NSIS y dpkg llegaron a ejecutarse de
+  verdad, ahora con avisos que los delatan en vez de degradar en silencio:
+  `tlaxtrelom.nsi` contenía `UninstallButton true`, que no es un comando de
+  NSIS, y `makensis` abortaba con exit 1 (línea 26) — eliminado; y la
+  plantilla `packaging/linux/control` empezaba con comentarios `#` (SPDX),
+  que el parser del fichero de control de dpkg rechaza
+  (`parsing file ... near line 0`, exit 2) — `xtask package` filtra ahora
+  las líneas de comentario al generar `DEBIAN/control`, y la validación
+  local con un `dpkg-deb` de mentirijillas exige campos obligatorios sin
+  comentarios.
+
 ## [0.3.1] — 2026-11-16
 
 ### Cambiado

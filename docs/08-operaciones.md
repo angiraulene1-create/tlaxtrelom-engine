@@ -148,7 +148,7 @@ Un flag desconocido es un error, no un *silent ignore*.
 Salida humana:
 
 ```text
-tlaxtrelom-engine 0.3.1 — selftest OK
+tlaxtrelom-engine 0.3.2 — selftest OK
   ticks           : 600
   sim hash        : 0x728977e58f08e538
   determinismo    : sí
@@ -289,7 +289,7 @@ shell evalúa) y pasan `sh -n`.
 
 | Contrato | Valor actual |
 |---|---|
-| Versión del workspace | 0.3.1 |
+| Versión del workspace | 0.3.2 |
 | MSRV | Rust 1.83 (`rust-version`, `clippy.toml`) |
 | ABI de geometría (`GEO_ABI_VERSION`) | 2 |
 | Formato cocinado | `TLXG` v2 (origen de sector en `double`, LOD en `double`, frustum culling) |

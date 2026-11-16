@@ -976,6 +976,15 @@ fn make_deb(raiz: &Path, opts: &Options, avisos: &mut Vec<String>) -> Result<Pat
     let arch = deb_arch(&target)?;
     let plantilla = fs::read_to_string(definitions(&workspace())?.join("linux/control"))
         .map_err(|e| format!("no se puede leer packaging/linux/control: {e}"))?;
+    // dpkg no perdona líneas de comentario (la plantilla del repo lleva la
+    // cabecera SPDX); el contenedor ar+tar nunca las validaba y por eso el
+    // fallo solo aparecía en máquinas con dpkg-deb.
+    let plantilla = plantilla
+        .lines()
+        .filter(|linea| !linea.starts_with('#'))
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n";
 
     let raiz_deb = con_sufijo(raiz, "deb-root");
     if raiz_deb.exists() {

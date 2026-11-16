@@ -23,7 +23,6 @@ Name "Tlaxtrelom ${VERSION}"
 OutFile "tlaxtrelom-setup-${VERSION}.exe"
 InstallDir "$PROGRAMFILES64\Tlaxtrelom"
 InstallDirRegKey HKLM "${UNINSTALL_KEY}" "InstallDir"
-UninstallButton true
 RequestExecutionLevel admin
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64

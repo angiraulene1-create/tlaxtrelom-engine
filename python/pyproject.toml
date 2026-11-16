@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tlaxtrelom-tools"
-version = "0.3.1"
+version = "0.3.2"
 description = "Herramientas de autoría y pipeline de Tlaxtrelom Engine"
 readme = { text = "Herramientas de autoría y pipeline de Tlaxtrelom Engine, bajo licencia MIT.", content-type = "text/plain" }
 requires-python = ">=3.11"

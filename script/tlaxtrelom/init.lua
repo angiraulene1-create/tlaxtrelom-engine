@@ -406,5 +406,5 @@ end
 
 M.Runtime = Runtime
 M.new = Runtime.new
-M.VERSION = "0.3.1"
+M.VERSION = "0.3.2"
 return M

@@ -43,7 +43,7 @@ local function load_runtime(source, options)
 end
 
 test("version", function()
-    eq(tlx.VERSION, "0.3.1")
+    eq(tlx.VERSION, "0.3.2")
     check(type(tlx.Runtime.new) == "function")
 end)
 
