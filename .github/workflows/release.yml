@@ -1,0 +1,225 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 angiraulene1-create
+#
+# Release automatizado: al publicar una etiqueta `v*` (o lanzándolo a mano con
+# workflow_dispatch) construye los instaladores de cada plataforma con el mismo
+# `cargo xtask package` que se corre en local, y los adjunta al Release de
+# GitHub. Degrada sin fingir: HarmonyOS sólo se intenta si hay NDK configurado,
+# y un fallo suyo no bloquea el release de Linux/Windows.
+
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Etiqueta a publicar (por defecto, la del push)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  # El push de etiquetas entrega refs/tags/vN; dispatch entrega la rama por la
+  # que se lanza, así que la etiqueta a publicar viene del input si existe.
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  linux:
+    name: instaladores Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libzstd-dev \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libvulkan-dev \
+            glslc \
+            spirv-tools
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Empaquetar (deb, AppImage, Flatpak, portable)
+        run: cargo xtask package --platform linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-linux
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.AppImage
+            dist/*.flatpak
+          if-no-files-found: error
+
+  windows:
+    name: instaladores Windows
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # Sin esto el host sería MSVC y xtask empaqueta la tripleta del host;
+          # MSVC vale, pero fijamos el objetivo explícito del portable.
+          target: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # xtask comprime el portable con `python3`; en Windows el runner sólo
+      # expone `python`, así que se crea el alias `python3` junto a él.
+      - name: Asegurar python3 en Windows
+        run: |
+          PY="$(command -v python)"
+          [ -x "$(command -v python3)" ] || cp "$PY" "$(dirname "$PY")/python3.exe"
+          python3 --version
+
+      # makensis genera tlaxtrelom-setup.exe; sin él, xtask degrada al
+      # instalador de respaldo y el paquete sigue saliendo adelante.
+      - name: Instalar NSIS (makensis)
+        run: |
+          choco install nsis -y || echo "aviso: sin NSIS, se usará el instalador de respaldo"
+
+      - name: Empaquetar (zip, exe, setup)
+        run: cargo xtask package --platform windows
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-windows
+          path: |
+            dist/*.zip
+            dist/*.exe
+          if-no-files-found: error
+
+  # HarmonyOS exige el NDK de OpenHarmony y la tripleta aarch64-unknown-linux-ohos.
+  # Los runners públicos no traen ni una cosa ni la otra, y docs/09 ya reconoce
+  # que no hay SDK OHOS en CI pública. Por eso este trabajo es OPT-IN: sólo corre
+  # si defines la variable de repositorio OHOS_NDK_URL (apuntando a un zip/tar del
+  # NDK accesible) y sigue siendo best-effort: su fallo no bloquea el release.
+  harmonyos:
+    name: instalador HarmonyOS (best-effort)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    if: vars.OHOS_NDK_URL != ''
+    env:
+      OHOS_NDK_HOME: ${{ github.workspace }}/ohos-ndk
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libzstd-dev zip unzip
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-ohos
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Descargar NDK de OpenHarmony
+        run: |
+          mkdir -p "$OHOS_NDK_HOME"
+          curl -fL "$OHOS_NDK_URL" -o /tmp/ohos-ndk.zip
+          # Se asume un archivo que al descomprimir deja llvm/bin/clang++ dentro
+          # de $OHOS_NDK_HOME (la ruta que busca xtask package).
+          unzip -q /tmp/ohos-ndk.zip -d "$OHOS_NDK_HOME"
+          test -x "$OHOS_NDK_HOME/llvm/bin/clang++" || {
+            echo "el NDK descargado no tiene llvm/bin/clang++; revisa OHOS_NDK_URL"; exit 1; }
+
+      - name: Empaquetar (zip con árbol HAP)
+        run: cargo xtask package --platform harmonyos --cross
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-harmonyos
+          path: dist/*.zip
+          if-no-files-found: warn
+
+  publicar:
+    name: publicar Release
+    needs: [linux, windows, harmonyos]
+    if: always() && needs.linux.result == 'success' && needs.windows.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reunir artefactos
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+
+      - name: Notas desde el CHANGELOG
+        run: |
+          version="${RELEASE_TAG#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" {f=1; next}
+            f && /^## \[/ {exit}
+            f' CHANGELOG.md > /tmp/notas.md
+          # Si el CHANGELOG no tiene la sección, nota mínima honesta.
+          [ -s /tmp/notas.md ] || printf 'Instaladores de %s.\n' "$RELEASE_TAG" > /tmp/notas.md
+          # El título va aparte; se quita el encabezado duplicado de las notas.
+          sed -i '1{/^$/d}' /tmp/notas.md
+
+      - name: Sumas SHA-256
+        run: (cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
+
+      - name: Crear o actualizar el Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          assets=(dist/*)
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+            echo "Release existente actualizado con ${#assets[@]} artefactos."
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --title "Tlaxtrelom Engine $RELEASE_TAG" \
+              --notes-file /tmp/notas.md \
+              --verify-tag
+            echo "Release creado con ${#assets[@]} artefactos."
+          fi

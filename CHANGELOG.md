@@ -10,6 +10,15 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+### Añadido
+
+- `.github/workflows/release.yml`: al publicar una etiqueta `v*` (o por
+  `workflow_dispatch`) construye en GitHub los instaladores de Linux y Windows
+  con `cargo xtask package`, y los adjunta junto a `SHA256SUMS` al Release, con
+  las notas recortadas del CHANGELOG. El instalador de HarmonyOS es opt-in
+  mediante la variable de repositorio `OHOS_NDK_URL` y best-effort: su fallo no
+  bloquea el release.
+
 ## [0.3.0] — 2026-11-16
 
 ### Añadido
