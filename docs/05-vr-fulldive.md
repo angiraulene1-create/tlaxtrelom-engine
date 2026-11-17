@@ -55,14 +55,14 @@ IntentGate ──► simulación a paso fijo ──► pose predicha ──► m
         │                                                           │
         ▼                                                           ▼
 eventos discretos                                    PASE 1 · escena → target HDR
+                                          (aquí se aplica la viñeta de confort)
                                                                        │
                                                           Rgba16Float (caída:
                                                           Rgba32Float → 8 bits)
                                                                        │
                                                                        ▼
                                                     PASE 2 · present: tonemap ACES
-                                                    (RRT+ODT), recorte, dither y
-                                                    viñeteado de confort
+                                                    (RRT+ODT), recorte y dither
                                                                        │
                                                                        ▼
                                                         swapchain sRGB / compositor
@@ -73,11 +73,13 @@ Detalles verificados en `renderer.rs`:
 - La escena se sombrea en **lineal** sobre un target `Rgba16Float`; si el
   adaptador no lo acepta se degrada a `Rgba32Float` y, en último término, a 8
   bits (el tonemap pierde alcance, no corrección).
-- El pase de presentación (`shaders/present.wgsl`) aplica exposición,
-  tonemap ACES (RRT+ODT), recorte y dither anti-banding. **No** aplica el
-  viñeteado de confort: ese uniform (`comfortVignette`) vive en el shader de
-  contrato `shaders/glsl/stereo_multiview.frag`, que CI compila pero que el
-  runtime no carga. La viñeta de `shaders/stereo.wgsl` es fija y decorativa.
+- El pase de escena (`shaders/scene3d.wgsl`) aplica la **viñeta de confort** con
+  la apertura que fija `XrSession::begin_frame` desde `ComfortVignette`
+  (`StereoFrame::comfort_aperture` → uniform `scene.comfort.x`); en reposo la
+  apertura es 1.0 y la viñeta no toca ningún píxel. El pase de presentación
+  (`present.wgsl`) sigue sin aplicar viñeta: solo tonemap, recorte y dither. El
+  contrato GLSL (`shaders/glsl/stereo_multiview.frag`) recibe el mismo signal en
+  su `comfortVignette.x` y CI lo compila, pero el runtime no lo carga.
 - **MSAA se negocia contra el target HDR**, no contra el swapchain. Pedir 2×
   sobre `Depth32Float` exige la feature `TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`;
   sin ella el device solo garantiza 1× y 4×.
@@ -166,14 +168,14 @@ un solo origen; para eso el contenido se parte en **sectores**, cada uno con su
   posición y orientación hacia el display time con límites de velocidad (15 m/s)
   y aceleración angular (20 rad/s), acotando la ventana a 50 ms.
 - **Viñeteado dinámico de confort**: atenúa el campo visual periférico ante
-  rotaciones bruscas o altas aceleraciones lineales, combatiendo el conflicto
-  vestibular causante del mareo por movimiento (VR sickness). La apertura la
-  calcula `ComfortVignette` (`xr.rs`), pero hoy **no llega al frame WGSL**: el
-  uniform `comfortVignette` sólo está en el shader de contrato
-  `shaders/glsl/stereo_multiview.frag`, que el runtime no carga. El pase de
-  presentación (`present.wgsl`) no aplica viñeta. No hay desenfoque periférico ni
-  ningún otro efecto de confort que no esté en esa lista: cada efecto es un
-  uniform, no una promesa.
+  rotaciones bruscas, combatiendo el conflicto vestibular causante del mareo por
+  movimiento (VR sickness). `XrSession::begin_frame` mide la velocidad angular
+  sobre el delta de yaw desenvuelto, `ComfortVignette` la convierte en apertura
+  [0.4, 1.0] y `scene3d.wgsl` la aplica en el pase de escena vía
+  `StereoFrame::comfort_aperture` → `scene.comfort.x`; en estéreo la viñeta se
+  centra por ojo (usa NDC de clip, no posición de framebuffer). No hay
+  desenfoque periférico ni ningún otro efecto de confort que no esté en esa
+  lista: cada efecto es un uniform, no una promesa.
 - **Escala de render adaptativa**: el control mira frames tardíos consecutivos,
   no un solo *spike*. La histéresis evita oscilar entre calidades.
 - **Foveación (Parcial/Contrato)**: el tipo `Foveation { Off, Fixed,

@@ -72,9 +72,12 @@ pub struct SceneUniforms {
     /// x = inicio de la niebla, y = rampa, z = densidad máxima, w = reserva.
     /// Depende del alcance del sector, no del shader.
     pub fog: [f32; 4],
+    /// x = apertura de confort [0.4, 1.0] de la sesión XR (`ComfortVignette`,
+    /// vía `StereoFrame::comfort_aperture`); 1 = sin viñeta. yzw reservado.
+    pub comfort: [f32; 4],
 }
 
-const _: () = assert!(std::mem::size_of::<SceneUniforms>() == 128);
+const _: () = assert!(std::mem::size_of::<SceneUniforms>() == 144);
 
 /// Uniforms del pase de presentación.
 #[repr(C)]
@@ -994,6 +997,7 @@ impl Renderer {
         let unlit = if dimension.mode.is_flat() { 1.0 } else { 0.0 };
         let params = [time, dimension_code, dimension.blend, unlit];
         let fog = frame.fog;
+        let comfort = [frame.comfort_aperture, 0.0, 0.0, 0.0];
         let light_dir = [0.4f32, 0.8f32, 0.5f32, 0.0f32];
 
         let camera_for = |eye: [f32; 3]| -> [f32; 3] {
@@ -1049,6 +1053,7 @@ impl Renderer {
                 light_dir: [light_dir[0], light_dir[1], light_dir[2], 0.0],
                 params,
                 fog,
+                comfort,
             };
             let right_scene = SceneUniforms {
                 view_proj: frame.right.view_proj,
@@ -1056,6 +1061,7 @@ impl Renderer {
                 light_dir: [light_dir[0], light_dir[1], light_dir[2], 1.0],
                 params,
                 fog,
+                comfort,
             };
             queue.write_buffer(&self.scene_buffers[0], 0, bytemuck::bytes_of(&left_scene));
             queue.write_buffer(&self.scene_buffers[1], 0, bytemuck::bytes_of(&right_scene));
@@ -1078,6 +1084,7 @@ impl Renderer {
                 light_dir: [light_dir[0], light_dir[1], light_dir[2], 2.0],
                 params,
                 fog,
+                comfort,
             };
             queue.write_buffer(&self.scene_buffers[0], 0, bytemuck::bytes_of(&mono_scene));
             queue.write_buffer(&self.scene_buffers[1], 0, bytemuck::bytes_of(&mono_scene));
@@ -1416,7 +1423,7 @@ mod tests {
 
     #[test]
     fn scene_uniforms_layout_is_stable() {
-        assert_eq!(std::mem::size_of::<SceneUniforms>(), 128);
+        assert_eq!(std::mem::size_of::<SceneUniforms>(), 144);
         assert_eq!(std::mem::align_of::<SceneUniforms>(), 4);
     }
 
@@ -1432,7 +1439,7 @@ mod tests {
     #[test]
     #[ignore = "necesita GPU; en CI corre con el runner gráfico"]
     fn gpu_frame_renders_and_presents_nonblack() {
-        let pixels = render_offscreen_frame(1);
+        let pixels = render_offscreen_frame(1, 1.0);
         assert_luma_in_expected_range(&pixels);
     }
 
@@ -1443,7 +1450,7 @@ mod tests {
     #[test]
     #[ignore = "necesita GPU; en CI corre con el runner gráfico"]
     fn gpu_frame_renders_and_presents_nonblack_msaa4() {
-        let pixels = render_offscreen_frame(4);
+        let pixels = render_offscreen_frame(4, 1.0);
         assert_luma_in_expected_range(&pixels);
     }
 
@@ -1454,11 +1461,41 @@ mod tests {
     #[test]
     #[ignore = "necesita GPU; en CI corre con el runner gráfico"]
     fn gpu_frame_renders_and_presents_nonblack_msaa2() {
-        let pixels = render_offscreen_frame(2);
+        let pixels = render_offscreen_frame(2, 1.0);
         assert_luma_in_expected_range(&pixels);
     }
 
-    fn render_offscreen_frame(requested_msaa: u32) -> Vec<[f32; 3]> {
+    /// La apertura de confort llega al uniform WGSL de verdad: con la
+    /// chiusura máxima (0.4) ningún píxel ilumina más que en reposo —la
+    /// viñeta solo oscurece— y la periferia de la rejilla cae de brillo. Los
+    /// píxeles del `clear` no pasan por el fragment, así que la comparación
+    /// píxel a píxel es válida entre las dos corridas.
+    #[test]
+    #[ignore = "necesita GPU; en CI corre con el runner gráfico"]
+    fn gpu_comfort_vignette_darkens_periphery_without_brightening() {
+        let open = render_offscreen_frame(1, 1.0);
+        let closed = render_offscreen_frame(1, 0.4);
+        let luma = |p: &[f32; 3]| 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2];
+        let size = 64usize;
+        let mut darkened = 0usize;
+        for (i, (o, c)) in open.iter().zip(closed.iter()).enumerate() {
+            let (lo, lc) = (luma(o), luma(c));
+            let (x, y) = (i % size, i / size);
+            assert!(
+                lc <= lo + 8.0 / 255.0,
+                "la viñeta aclaró el píxel ({x},{y}): {lc:.4} > {lo:.4}"
+            );
+            if lo - lc > 0.02 {
+                darkened += 1;
+            }
+        }
+        assert!(
+            darkened > 40,
+            "apertura 0.4 sin viñeta visible: sólo {darkened} píxeles bajaron de brillo"
+        );
+    }
+
+    fn render_offscreen_frame(requested_msaa: u32, comfort_aperture: f32) -> Vec<[f32; 3]> {
         let size = 64u32;
         let instance = wgpu::Instance::default();
         let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
@@ -1516,7 +1553,7 @@ mod tests {
             samples,
             depth_format,
         );
-        let frame = crate::xr::StereoFrame::mono(
+        let mut frame = crate::xr::StereoFrame::mono(
             crate::xr::HeadPose {
                 position: [0.0, 1.6, 0.0],
                 yaw: 0.0,
@@ -1526,6 +1563,7 @@ mod tests {
             0,
             std::time::Instant::now(),
         );
+        frame.comfort_aperture = comfort_aperture;
         renderer.update(
             &queue,
             size,

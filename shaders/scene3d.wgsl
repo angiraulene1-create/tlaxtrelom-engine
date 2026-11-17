@@ -17,6 +17,9 @@ struct SceneUniforms {
     params: vec4<f32>,
     // x = inicio de la niebla, y = rampa, z = densidad máxima (metros)
     fog: vec4<f32>,
+    // x = apertura de confort de la sesión XR (1 = sin viñeta, 0.4 = máxima
+    // chiusura); yzw reservado. Alimenta la viñeta anti-cinetosis del fragment.
+    comfort: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> scene: SceneUniforms;
@@ -32,7 +35,24 @@ struct VertexOutput {
     @location(0) world_pos: vec3<f32>,
     @location(1) normal: vec3<f32>,
     @location(2) color: vec3<f32>,
+    // NDC por ojo (xy/w antes del viewport): en estéreo side-by-side el
+    // escissor no entra aquí, así que la viñeta se centra en cada ojo.
+    @location(3) ndc: vec2<f32>,
 };
+
+// Viñeta de confort: en reposo (apertura 1) no toca nada; al cerrarse oscurece
+// la periferia hasta 1/4 de brillo en las esquinas. El divisor 0.6 normaliza
+// el rango [0.4, 1.0] que garantiza ComfortVignette.
+fn comfort_factor(ndc: vec2<f32>, aperture: f32) -> f32 {
+    let strength = clamp((1.0 - aperture) / 0.6, 0.0, 1.0);
+    if (strength <= 0.0) {
+        return 1.0;
+    }
+    let r = clamp(length(ndc) / 1.4142136, 0.0, 1.0);
+    let inner = 0.85 - 0.35 * strength;
+    let t = smoothstep(inner, 1.0, r);
+    return 1.0 - t * 0.75 * strength;
+}
 
 @vertex
 fn vs_main(model: VertexInput) -> VertexOutput {
@@ -41,16 +61,19 @@ fn vs_main(model: VertexInput) -> VertexOutput {
     out.normal = normalize(model.normal);
     out.color = model.color;
     out.clip_pos = scene.view_proj * vec4<f32>(model.position, 1.0);
+    let w = select(-1.0e-6, out.clip_pos.w, abs(out.clip_pos.w) >= 1.0e-6);
+    out.ndc = out.clip_pos.xy / w;
     return out;
 }
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let albedo = max(in.color, vec3<f32>(0.0));
+    let vignette = comfort_factor(in.ndc, scene.comfort.x);
 
     // Modo 2D: la escena ya viene compuesta en NDC; se presenta plana.
     if (scene.params.w > 0.5) {
-        return vec4<f32>(albedo, 1.0);
+        return vec4<f32>(albedo * vignette, 1.0);
     }
 
     let light = normalize(scene.light_dir.xyz);
@@ -82,5 +105,5 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let fog_color = vec3<f32>(0.004, 0.006, 0.012);
     lit = mix(lit, fog_color, fog);
 
-    return vec4<f32>(lit, 1.0);
+    return vec4<f32>(lit * vignette, 1.0);
 }

@@ -289,6 +289,11 @@ pub struct StereoFrame {
     /// `[inicio, rampa, densidad máxima, 0]` derivada del alcance del sector: la
     /// sube el renderer tal cual, sin volver a consultar la configuración.
     pub fog: [f32; 4],
+    /// Apertura de confort [0.4, 1.0] de [`ComfortVignette`]: la fija
+    /// `XrSession::begin_frame` según la velocidad angular del frame anterior
+    /// y `scene3d.wgsl` la convierte en viñeteado anti-cinetosis. 1.0 = sin
+    /// viñeta.
+    pub comfort_aperture: f32,
     pub frame_index: u64,
     /// Tiempo de display predicho (ns, reloj monótono del host).
     pub predicted_display_time_ns: u64,
@@ -331,6 +336,7 @@ impl StereoFrame {
             right: view,
             ipd_m: 0.0,
             fog: proj.depth.fog_params(),
+            comfort_aperture: 1.0,
             frame_index,
             // El display time lo fija el compositor; en mono no hay predicción.
             predicted_display_time_ns: 0,
@@ -396,6 +402,7 @@ impl StereoFrame {
             },
             ipd_m,
             fog: proj.depth.fog_params(),
+            comfort_aperture: 1.0,
             frame_index,
             predicted_display_time_ns,
             stereo: true,
@@ -432,6 +439,9 @@ pub struct XrSession {
     stats: XrStats,
     late_streak: u32,
     effective_scale: f32,
+    vignette: ComfortVignette,
+    last_yaw: f32,
+    last_pose_time: Option<Instant>,
 }
 
 impl XrSession {
@@ -449,6 +459,9 @@ impl XrSession {
                 ..XrStats::default()
             },
             late_streak: 0,
+            vignette: ComfortVignette::default(),
+            last_yaw: 0.0,
+            last_pose_time: None,
         })
     }
 
@@ -488,7 +501,21 @@ impl XrSession {
             .saturating_duration_since(self.started)
             .as_nanos() as u64;
 
-        let frame = match self.cfg.mode {
+        // La apertura de confort mide la velocidad angular sobre el delta de
+        // yaw desenvuelto: la resta cruda saltaría ±π en cada vuelta y la
+        // viñeta se cerraría sola en reposo.
+        let aperture = match self.last_pose_time {
+            Some(prev) => {
+                let dt = now.saturating_duration_since(prev).as_secs_f32().max(1e-3);
+                let dyaw = wrap_angle(head.yaw - self.last_yaw);
+                self.vignette.update(dyaw / dt, 0.0, dt)
+            }
+            None => self.vignette.aperture(),
+        };
+        self.last_pose_time = Some(now);
+        self.last_yaw = head.yaw;
+
+        let mut frame = match self.cfg.mode {
             XrMode::Off => StereoFrame::mono_with_dimension(
                 self.cfg.dimension,
                 head,
@@ -512,6 +539,7 @@ impl XrSession {
                 frame
             }
         };
+        frame.comfort_aperture = aperture;
 
         self.frame_index = self.frame_index.wrapping_add(1);
         self.stats.frames = self.stats.frames.saturating_add(1);
@@ -1155,6 +1183,68 @@ mod tests {
         let frame = StereoFrame::stereo(HeadPose::default(), 0.063, 0.5, 1.5, 0, 0);
         assert!(frame.left.view_proj.iter().all(|v| v.is_finite()));
         assert!(frame.right.view_proj.iter().all(|v| v.is_finite()));
+    }
+
+    #[test]
+    fn la_sesion_estrecha_la_vineta_al_cerrar_y_la_abre_al_asentar() {
+        let mut s = XrSession::new(XrConfig::default()).expect("sesión XR");
+        let t0 = Instant::now();
+        let pose = |yaw| HeadPose {
+            position: [0.0, 1.6, 0.0],
+            yaw,
+        };
+        // Primer frame: sin histórico, apertura de reposo.
+        assert_eq!(
+            s.begin_frame(pose(0.0), 1.6, t0).unwrap().comfort_aperture,
+            1.0
+        );
+        // 2 rad en 50 ms es un latigazo: la apertura debe bajar.
+        let whip = s
+            .begin_frame(pose(2.0), 1.6, t0 + Duration::from_millis(50))
+            .unwrap()
+            .comfort_aperture;
+        assert!(whip < 1.0, "giro brusco sin viñeta: {whip}");
+        assert!(
+            (0.4..1.0).contains(&whip),
+            "apertura fuera de rango: {whip}"
+        );
+        // Con la cabeza asentada la viñeta se retira hacia 1.0.
+        let mut settled = whip;
+        for i in 1..200 {
+            let next = s
+                .begin_frame(pose(2.0), 1.6, t0 + Duration::from_millis(50 + i * 100))
+                .unwrap()
+                .comfort_aperture;
+            assert!(next >= settled - 1e-6, "la viñeta se cerró estando quieta");
+            settled = next;
+        }
+        assert!(
+            settled > 0.95,
+            "la viñeta no se abrió al asentar: {settled}"
+        );
+    }
+
+    #[test]
+    fn el_delta_de_yaw_se_mide_desenvuelto_sin_salto_de_pi() {
+        let mut s = XrSession::new(XrConfig::default()).expect("sesión XR");
+        let t0 = Instant::now();
+        let pose = |yaw| HeadPose {
+            position: [0.0, 1.6, 0.0],
+            yaw,
+        };
+        s.begin_frame(pose(std::f32::consts::PI - 0.01), 1.6, t0)
+            .unwrap();
+        // Cruzar ±π es medio centiradián de giro real, no una resta de ~2π
+        // que cerraría la viñeta con la cabeza quieta.
+        let calm = s
+            .begin_frame(
+                pose(-std::f32::consts::PI + 0.01),
+                1.6,
+                t0 + Duration::from_millis(200),
+            )
+            .unwrap()
+            .comfort_aperture;
+        assert!(calm > 0.97, "el salto de ±π cerró la viñeta: {calm}");
     }
 
     #[test]

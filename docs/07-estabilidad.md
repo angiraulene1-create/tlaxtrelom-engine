@@ -156,8 +156,8 @@ fixture.
 
 | Capa | Estado actual | Comando |
 |---|---|---|
-| Rust (`tlaxtrelom-core`, `--all-features`) | 126 pasan, 3 ignoradas | `cargo test -p tlaxtrelom-core --all-features` |
-| Rust (sin features) | 125 pasan | `cargo test -p tlaxtrelom-core` |
+| Rust (`tlaxtrelom-core`, `--all-features`) | 128 pasan, 4 ignoradas | `cargo test -p tlaxtrelom-core --all-features` |
+| Rust (sin features) | 127 pasan | `cargo test -p tlaxtrelom-core` |
 | Rust (`xtask`, empaquetado y validación de `packaging/`) | 18 pasan | `cargo test -p xtask` |
 | GPU offscreen (ignoradas, requieren hardware local) | 3 | `cargo test -- --ignored` |
 | Python | 40 pasan | `cd python && python3 -m unittest discover -s tests` |
@@ -240,11 +240,6 @@ hardware real.
 - `native/tlaxtrelom-spatial/spatial.zig` comparte la ABI del kernel C y no la
   compila ninguna ruta de build ni de CI: la contrapartida en Zig está sin
   verificar.
-- El viñeteado de confort está a medias: `ComfortVignette` (`xr.rs`) calcula la
-  apertura en CPU, pero ningún uniform del frame WGSL la consume. El shader que
-  sí recibe `comfortVignette` es `shaders/glsl/stereo_multiview.frag`, un
-  contrato compilado en CI que el runtime no carga. En pantalla hoy no hay
-  confort dinámico.
 - Sin fuzzing de la ruta de render en CI (WGSL/SPIR-V/assets cocinados).
 - Firmado de artefactos y SBOM: política documentada; falta automatizar en CI.
 - El conteo de instrucciones de Lua es una **cota inferior** muestreada por

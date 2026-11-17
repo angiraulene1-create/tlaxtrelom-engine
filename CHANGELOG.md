@@ -10,6 +10,21 @@ explícita y no un accidente.
 
 ## [Sin publicar]
 
+### Añadido
+
+- La viñeta de confort llega por fin al frame WGSL: `XrSession::begin_frame`
+  mide la velocidad angular sobre el delta de yaw desenvuelto, `ComfortVignette`
+  la traduce a apertura [0.4, 1.0], y `scene3d.wgsl` la aplica en el pase de
+  escena desde el nuevo uniform `scene.comfort.x` (via
+  `StereoFrame::comfort_aperture`; `SceneUniforms` pasa de 128 a 144 bytes). En
+  reposo la apertura es 1.0 y ningún píxel cambia; con el peor latigazo la
+  esquina queda a 1/4 de brillo, centrada por ojo en estéreo (NDC de clip, no
+  framebuffer). Verificado en GPU real offscreen (oscurar periferia, no aclara
+  nada) y en ventana en los siete modos dimensionales. Los deudos de
+  `docs/07` §9 y `docs/05` se reescriben como hecho.
+
+### Corregido
+
 - El workflow de release pasa `--prerelease` a `gh release create/edit` cuando
   la etiqueta lleva sufijo semver: `gh` **no** detecta el sufijo solo
   (`v0.4.0-alpha.1` se publicó como release estable y hubo que marcarlo a

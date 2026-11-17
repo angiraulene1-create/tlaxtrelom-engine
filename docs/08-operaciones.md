@@ -81,7 +81,7 @@ cargo xtask docs          # enlaces locales de la documentación
 ```
 
 Referencias verificadas: `cargo test -p tlaxtrelom-core --all-features` deja
-126 pruebas pasando y 3 ignoradas (GPU); sin features, 125. En `xtask`, otras
+128 pruebas pasando y 4 ignoradas (GPU); sin features, 127. En `xtask`, otras
 18 sobre el empaquetado.
 
 La matriz de CI (`cargo xtask ci`) ejecuta, en este orden:

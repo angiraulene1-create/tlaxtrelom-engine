@@ -108,7 +108,7 @@ cargo run -p tlaxtrelom-core --bin tlaxtrelom -- --stereo
 make -C native/tlaxtrelom-geometry test
 make -C native/tlaxtrelom-spatial test
 make -C native/tlaxtrelom-harmonyos test
-cargo test -p tlaxtrelom-core --all-features   # 126 pruebas, 3 de GPU en --ignored
+cargo test -p tlaxtrelom-core --all-features   # 128 pruebas, 4 de GPU en --ignored
 
 # 5. Herramientas de autoría
 (cd python && python3 -m tlaxtrelom_tools.cli selftest)
@@ -179,9 +179,11 @@ Ver [Tlaxtrelom IR](docs/03-tlaxtrelom-ir.md).
   selftest determinista.
 - Render en dos pases: escena a un target HDR lineal (`Rgba16Float`, con caída a
   `Rgba32Float` y a 8 bits) y presentación con exposición, tonemap ACES y
-  dither (`shaders/present.wgsl`), sin viñeteado de confort en el camino WGSL:
-  la apertura la calcula `ComfortVignette` (`xr.rs`) pero sólo la consume el
-  shader de contrato GLSL, que el runtime no carga.
+  dither (`shaders/present.wgsl`). La **viñeta de confort** vive en el pase de
+  escena: `XrSession::begin_frame` la calcula con `ComfortVignette` (velocidad
+  angular desenvuelta), la viaja en `StereoFrame::comfort_aperture` y
+  `scene3d.wgsl` la aplica por ojo desde el uniform `scene.comfort.x` — 1.0 en
+  reposo, 0.4 en el peor latigazo, esquina a 1/4 de brillo.
   El MSAA vive en el target HDR; `present.wgsl` es un triángulo fullscreen sin
   geometría. El estéreo es **un pase de escena con un draw recortado por ojo**
   (side-by-side), no multiview (`multiview: None`).
@@ -205,7 +207,7 @@ Ver [Tlaxtrelom IR](docs/03-tlaxtrelom-ir.md).
   Sin límite de arena ni colapso de estéreo por alejamiento del origen.
 - Pipeline Python (40 tests), runtime Lua (14 tests), tooling TypeScript
   (24 tests) y los smoke de ABI de geometría C++, spatial C y HarmonyOS verdes.
-  En Rust: 129 `#[test]` en `tlaxtrelom-core` (126 corren con `--all-features`; 3 de
+  En Rust: 132 `#[test]` en `tlaxtrelom-core` (128 corren con `--all-features`; 4 de
   GPU tras `--ignored`) y 18 en `xtask`.
 - FullDive: contrato de decoder, transporte *mock*/replay, gate, watchdog y
   presupuesto RT. Es un **complemento experimental opt-in**: `Config::default()`
